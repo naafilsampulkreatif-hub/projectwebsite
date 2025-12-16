@@ -12,9 +12,15 @@ import (
 
 	"github.com/gorilla/mux" // Router
 	"github.com/rs/cors" // CORS
+	"github.com/joho/godotenv" // Load .env file
 )
 
 func main() {
+	// Load environment variables from .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using system environment variables")
+	}
+
 	// Initialize Database
 	db.InitDB()
 

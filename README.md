@@ -29,10 +29,15 @@ A responsive ecommerce website built with a Golang backend and Vue.js frontend, 
    ```bash
    go mod tidy
    ```
-3. Run the server:
+3. Configure environment:
+   Copy `.env.example` to `.env` and update your MySQL password:
    ```bash
-   # Set environment variables if needed (defaults provided in code)
-   export DB_PASS=yourpassword
+   cp .env.example .env
+   # Edit .env and set DB_PASS=your_real_password
+   ```
+
+4. Run the server:
+   ```bash
    go run main.go
    ```
    Server runs on `http://localhost:8080`.
