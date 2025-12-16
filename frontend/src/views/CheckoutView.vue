@@ -2,9 +2,11 @@
 import { ref } from 'vue';
 import { useCartStore } from '../stores/cart';
 import { useRouter } from 'vue-router';
+import { useToastStore } from '../stores/toast';
 
 const cartStore = useCartStore();
 const router = useRouter();
+const toast = useToastStore();
 
 const form = ref({
     firstName: '',
@@ -31,10 +33,10 @@ const handleCheckout = async () => {
 
     const success = await cartStore.checkout(guestInfo);
     if (success) {
-        alert("Pesanan berhasil dibuat!");
+        toast.show("Pesanan berhasil dibuat!", "success");
         router.push('/');
     } else {
-        alert("Checkout gagal. Silakan coba lagi.");
+        toast.show("Checkout gagal. Silakan coba lagi.", "error");
     }
 };
 </script>

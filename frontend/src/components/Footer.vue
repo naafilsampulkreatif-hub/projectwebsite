@@ -42,6 +42,8 @@
     </div>
     <div class="text-center mt-12 text-sm opacity-60 bg-dark-blue/50 py-4">
       Made With Love By Finland All Right Reserved
+      <span class="mx-2">|</span>
+      <router-link to="/login" class="hover:text-neon-green">Admin Login</router-link>
     </div>
   </footer>
 </template>

@@ -47,9 +47,6 @@ const handleLogin = async () => {
                 </button>
             </form>
 
-            <p class="mt-8 text-center text-sm text-gray-500">
-                Belum punya akun? <router-link to="/register" class="text-neon-green font-bold hover:underline">Daftar Disini</router-link>
-            </p>
              <p class="mt-2 text-center text-sm text-gray-400">
                 <router-link to="/" class="hover:underline">Kembali ke Home</router-link>
             </p>

@@ -89,6 +89,24 @@ const deleteProduct = async (id: number) => {
         alert("Error deleting product");
     }
 };
+
+const handleFileUpload = async (event: any) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const res = await api.post('/admin/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        form.value.image_url = res.data.url;
+    } catch (e) {
+        console.error(e);
+        alert("Upload gagal");
+    }
+};
 </script>
 
 <template>
@@ -124,7 +142,16 @@ const deleteProduct = async (id: number) => {
                 <input v-model="form.slug" placeholder="Slug (URL)" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green" required>
                 <input v-model="form.price" type="number" step="100" placeholder="Harga (IDR)" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green" required>
                 <input v-model="form.stock" type="number" placeholder="Stok" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green" required>
-                <input v-model="form.image_url" placeholder="URL Gambar" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green">
+
+                <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus-within:border-neon-green">
+                    <label class="block text-sm text-gray-500 mb-1">Gambar Produk</label>
+                    <input type="file" @change="handleFileUpload" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-neon-green file:text-black hover:file:bg-[#00cc00]"/>
+                    <input v-model="form.image_url" type="hidden">
+                    <div v-if="form.image_url" class="mt-2">
+                        <img :src="form.image_url" class="h-20 w-20 object-cover rounded">
+                    </div>
+                </div>
+
                 <input v-model="form.category_id" type="number" placeholder="ID Kategori" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green">
                 <textarea v-model="form.description" placeholder="Deskripsi" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green md:col-span-2 h-32"></textarea>
 

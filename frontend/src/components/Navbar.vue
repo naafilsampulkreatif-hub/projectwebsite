@@ -17,9 +17,9 @@ const authStore = useAuthStore()
         <RouterLink to="/" class="hover:text-neon-green transition-colors">Home</RouterLink>
         <RouterLink to="/cart" class="hover:text-neon-green transition-colors">Keranjang</RouterLink>
         <RouterLink to="/" class="hover:text-neon-green transition-colors">Toko</RouterLink>
+        <RouterLink to="/orders" class="hover:text-neon-green transition-colors">Pesanan</RouterLink>
 
-        <RouterLink v-if="!authStore.isAuthenticated" to="/login" class="hover:text-neon-green transition-colors">Akun</RouterLink>
-        <RouterLink v-else to="/admin" class="hover:text-neon-green transition-colors">Dashboard</RouterLink>
+        <RouterLink v-if="authStore.isAdmin" to="/admin" class="hover:text-neon-green transition-colors text-red-600">Dashboard</RouterLink>
       </div>
     </div>
   </nav>

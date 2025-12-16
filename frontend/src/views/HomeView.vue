@@ -2,9 +2,11 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import { useRouter } from 'vue-router'
+import { useToastStore } from '../stores/toast'
 
 const products = ref<any[]>([])
 const router = useRouter()
+const toast = useToastStore()
 
 onMounted(async () => {
   try {
@@ -30,10 +32,10 @@ const addToCart = async (product: any) => {
         product_id: product.id,
         quantity: 1
      })
-     alert('Produk ditambahkan ke keranjang!')
+     toast.show('Produk ditambahkan ke keranjang!', 'success')
   } catch (e) {
      console.error(e)
-     alert('Gagal menambahkan ke keranjang')
+     toast.show('Gagal menambahkan ke keranjang', 'error')
   }
 }
 
@@ -146,7 +148,7 @@ const getImageUrl = (url: string) => url || 'https://via.placeholder.com/300x200
                 <span class="text-neon-green text-3xl font-bold">U{{i}}</span>
              </div>
              <h3 class="mt-12 font-bold text-xl text-center">Orang {{ i }}</h3>
-             <p class="text-sm opacity-90 mt-4 text-center italic leading-relaxed">
+             <p class="text-sm opacity-90 mt-4 text-center italic leading-relaxed text-black">
                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
              </p>
           </div>

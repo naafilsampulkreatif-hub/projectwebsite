@@ -27,6 +27,9 @@ func main() {
 	// Initialize Router
 	r := mux.NewRouter()
 
+	// Static Files
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
+
 	// Public Routes (Auth)
 	r.HandleFunc("/api/register", handlers.Register).Methods("POST") // Register
 	r.HandleFunc("/api/login", handlers.Login).Methods("POST") // Login
@@ -48,6 +51,7 @@ func main() {
 	adminRouter.HandleFunc("/products", handlers.CreateProduct).Methods("POST") // Add Product
 	adminRouter.HandleFunc("/products/{id}", handlers.UpdateProduct).Methods("PUT") // Update Product
 	adminRouter.HandleFunc("/products/{id}", handlers.DeleteProduct).Methods("DELETE") // Delete Product
+	adminRouter.HandleFunc("/upload", handlers.UploadFile).Methods("POST") // Upload File
 
 	// CORS Handler
 	c := cors.New(cors.Options{

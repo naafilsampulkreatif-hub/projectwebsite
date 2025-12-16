@@ -1,11 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
 import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
 import AdminView from '../views/AdminView.vue'
-import OrdersView from '../views/OrdersView.vue' // New view
+import OrdersView from '../views/OrdersView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -22,21 +21,14 @@ const router = createRouter({
       component: LoginView
     },
     {
-      path: '/register',
-      name: 'register',
-      component: RegisterView
-    },
-    {
       path: '/cart',
       name: 'cart',
       component: CartView,
-      // No auth required for guest cart
     },
     {
       path: '/checkout',
       name: 'checkout',
       component: CheckoutView,
-      // No auth required for guest checkout
     },
     {
       path: '/orders',
