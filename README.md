@@ -45,6 +45,7 @@
     
 8.  **End.**
     
+<img width="680" height="1674" alt="flowchart-nightstalkers" src="https://github.com/user-attachments/assets/ea566a87-9c3c-4efc-acba-955fa9245847" />
 
 
 3\. Spesifikasi Teknis (Tech Stack)
