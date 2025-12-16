@@ -47,78 +47,76 @@ Berikut adalah deskripsi alur untuk dua fitur kritis (Login User dan Checkout) d
 
 <img width="2626" height="2384" alt="codetoflow" src="https://github.com/user-attachments/assets/62a524c6-595d-49ee-b851-36873d4f0e75" />
 
+NightStalkers Ecommerce (Go + Vue)
+Situs web e-commerce responsif yang dibangun dengan backend Golang dan frontend Vue.js, dilengkapi dengan dashboard admin multi-level, autentikasi JWT, dan fungsi keranjang belanja lengkap.
 
+Prasyarat
+Go 1.22+
 
+Node.js 18+
 
+MySQL 8.0+
 
+Pengaturan (Setup)
+Database
+Buat database MySQL dengan nama ecommerce.
 
+Jalankan skrip inisialisasi:
 
+Bash
 
+mysql -u root -p ecommerce < backend/schema.sql
+Tambahkan pengguna admin secara manual ke dalam tabel users jika Anda ingin segera mengakses Admin Dashboard (setel role='admin').
 
-# Molla Ecommerce (Go + Vue)
+Backend
+Masuk ke direktori backend:
 
-A responsive ecommerce website built with a Golang backend and Vue.js frontend, featuring a multi-level admin dashboard, JWT authentication, and full shopping cart functionality.
+Bash
 
-## Prerequisites
+cd backend
+Instal dependensi:
 
-- Go 1.22+
-- Node.js 18+
-- MySQL 8.0+
+Bash
 
-## Setup
+go mod tidy
+Konfigurasi lingkungan (environment): Salin .env.example menjadi .env dan perbarui kata sandi MySQL Anda:
 
-### Database
+Bash
 
-1. Create a MySQL database named `ecommerce`.
-2. Run the initialization script:
-   ```bash
-   mysql -u root -p ecommerce < backend/schema.sql
-   ```
-3. Insert an admin user manually into the `users` table if you want to access the Admin Dashboard immediately (role='admin').
+cp .env.example .env
+# Edit .env dan setel DB_PASS=kata_sandi_asli_anda
+Jalankan server:
 
-### Backend
+Bash
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   go mod tidy
-   ```
-3. Configure environment:
-   Copy `.env.example` to `.env` and update your MySQL password:
-   ```bash
-   cp .env.example .env
-   # Edit .env and set DB_PASS=your_real_password
-   ```
+go run main.go
+Server akan berjalan di http://localhost:8080.
 
-4. Run the server:
-   ```bash
-   go run main.go
-   ```
-   Server runs on `http://localhost:8080`.
+Frontend
+Masuk ke direktori frontend:
 
-### Frontend
+Bash
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-   App runs on `http://localhost:5173`.
+cd frontend
+Instal dependensi:
 
-## Features
+Bash
 
-- **Authentication**: Register/Login with JWT.
-- **RBAC**: Admin vs Customer roles.
-- **Admin Dashboard**: Manage products (CRUD).
-- **Shopping**: Browse products, Add to Cart, Checkout.
-- **Design**: Responsive UI with TailwindCSS.
+npm install
+Jalankan server pengembangan:
+
+Bash
+
+npm run dev
+Aplikasi akan berjalan di http://localhost:5173.
+
+Fitur
+Autentikasi: Registrasi/Login menggunakan JWT.
+
+RBAC (Role-Based Access Control): Perbedaan peran antara Admin dan Pelanggan.
+
+Admin Dashboard: Mengelola produk (CRUD: Tambah, Baca, Ubah, Hapus).
+
+Belanja: Menjelajahi produk, Tambah ke Keranjang, dan Checkout.
+
+Desain: Antarmuka pengguna (UI) responsif menggunakan TailwindCSS.
