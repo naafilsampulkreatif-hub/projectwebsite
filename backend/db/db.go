@@ -22,7 +22,7 @@ func InitDB() {
 	// Get the database password from environment variables, default to 'password'
 	dbPass := os.Getenv("DB_PASS")
 	if dbPass == "" { // Check if the variable is empty
-		dbPass = "password" // Set default value
+		dbPass = "" // Set default value
 	}
 
 	// Get the database host from environment variables, default to 'localhost'
