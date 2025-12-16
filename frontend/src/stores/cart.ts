@@ -29,9 +29,10 @@ export const useCartStore = defineStore('cart', {
       }
     },
     // Checkout
-    async checkout() {
+    async checkout(guestInfo: any = null) {
       try {
-        await api.post('/checkout', {});
+        // Send guest_info if available
+        await api.post('/checkout', { guest_info: guestInfo });
         this.items = []; // Clear local cart
         return true;
       } catch (error) {

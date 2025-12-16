@@ -8,13 +8,19 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to attach the token
+// Add a request interceptor to attach the token and session ID
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token'); // Get token from local storage
     if (token) {
       config.headers.Authorization = `Bearer ${token}`; // Attach to header
     }
+
+    const sessionId = localStorage.getItem('session_id');
+    if (sessionId) {
+      config.headers['X-Session-ID'] = sessionId;
+    }
+
     return config;
   },
   (error) => {

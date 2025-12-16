@@ -7,7 +7,7 @@ import (
 	"ecommerce-backend/utils" // Utils for JWT
 )
 
-// AuthMiddleware checks for a valid JWT token
+// AuthMiddleware checks for a valid JWT token (Strict)
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get the Authorization header
@@ -38,6 +38,32 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		// Call the next handler with the new context
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// OptionalAuthMiddleware checks for a valid JWT token but proceeds even if missing (Guest)
+func OptionalAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+
+		// If header exists and looks correct, try to validate
+		if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 {
+				tokenString := parts[1]
+				claims, err := utils.ValidateToken(tokenString)
+				if err == nil {
+					// Valid token, add to context
+					ctx := context.WithValue(r.Context(), "user_id", claims.UserID)
+					ctx = context.WithValue(ctx, "role", claims.Role)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
+			}
+		}
+
+		// Proceed without user_id in context (Guest mode)
+		next.ServeHTTP(w, r)
 	})
 }
 

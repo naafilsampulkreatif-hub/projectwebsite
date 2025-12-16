@@ -27,24 +27,24 @@ func main() {
 	// Initialize Router
 	r := mux.NewRouter()
 
-	// Public Routes
+	// Public Routes (Auth)
 	r.HandleFunc("/api/register", handlers.Register).Methods("POST") // Register
 	r.HandleFunc("/api/login", handlers.Login).Methods("POST") // Login
 	r.HandleFunc("/api/products", handlers.GetProducts).Methods("GET") // List Products
 	r.HandleFunc("/api/products/{id}", handlers.GetProduct).Methods("GET") // Get Product
 
-	// Protected Routes (User)
-	userRouter := r.PathPrefix("/api").Subrouter()
-	userRouter.Use(middleware.AuthMiddleware)
-	userRouter.HandleFunc("/cart", handlers.GetCart).Methods("GET") // View Cart
-	userRouter.HandleFunc("/cart", handlers.AddToCart).Methods("POST") // Add to Cart
-	userRouter.HandleFunc("/checkout", handlers.Checkout).Methods("POST") // Checkout
-	userRouter.HandleFunc("/orders", handlers.GetOrders).Methods("GET") // My Orders
+	// Hybrid Routes (User or Guest)
+	hybridRouter := r.PathPrefix("/api").Subrouter()
+	hybridRouter.Use(middleware.OptionalAuthMiddleware)
+	hybridRouter.HandleFunc("/cart", handlers.GetCart).Methods("GET") // View Cart
+	hybridRouter.HandleFunc("/cart", handlers.AddToCart).Methods("POST") // Add to Cart
+	hybridRouter.HandleFunc("/checkout", handlers.Checkout).Methods("POST") // Checkout
+	hybridRouter.HandleFunc("/orders", handlers.GetOrders).Methods("GET") // My Orders (or Session Orders)
 
 	// Protected Routes (Admin)
 	adminRouter := r.PathPrefix("/api/admin").Subrouter()
-	adminRouter.Use(middleware.AuthMiddleware)
-	adminRouter.Use(middleware.AdminMiddleware)
+	adminRouter.Use(middleware.AuthMiddleware) // Must be logged in
+	adminRouter.Use(middleware.AdminMiddleware) // Must be admin
 	adminRouter.HandleFunc("/products", handlers.CreateProduct).Methods("POST") // Add Product
 	adminRouter.HandleFunc("/products/{id}", handlers.UpdateProduct).Methods("PUT") // Update Product
 	adminRouter.HandleFunc("/products/{id}", handlers.DeleteProduct).Methods("DELETE") // Delete Product
@@ -53,7 +53,7 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"}, // Vue dev server
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}, // Methods
-		AllowedHeaders:   []string{"Authorization", "Content-Type"}, // Headers
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Session-ID"}, // Headers (Added X-Session-ID)
 		AllowCredentials: true,
 	})
 

@@ -1,15 +1,33 @@
 package handlers // Package handlers
 
 import (
+	"database/sql"
 	"encoding/json" // JSON encoding
 	"net/http" // HTTP
 	"ecommerce-backend/db" // DB
 	"ecommerce-backend/models" // Models
 )
 
-// AddToCart adds an item to the user's cart
+// getIdentity returns (userID *int, sessionID string)
+func getIdentity(r *http.Request) (*int, string) {
+	// Check Context for UserID
+	if val := r.Context().Value("user_id"); val != nil {
+		uid := val.(int)
+		return &uid, ""
+	}
+	// Check Header for SessionID
+	sessID := r.Header.Get("X-Session-ID")
+	return nil, sessID
+}
+
+// AddToCart adds an item to the user's cart or guest session cart
 func AddToCart(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int) // Get user ID from context
+	userID, sessionID := getIdentity(r)
+
+	if userID == nil && sessionID == "" {
+		http.Error(w, "User ID or Session ID required", http.StatusBadRequest)
+		return
+	}
 
 	var item models.CartItem // Cart item struct
 	// Decode JSON
@@ -18,13 +36,25 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insert or Update (upsert)
-	// If item exists for user, increment quantity
-	// MySQL: ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
-	query := `INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)
-	          ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`
+	// Logic: Upsert based on (user_id, product_id) OR (session_id, product_id)
+	// Since unique key is (user_id, session_id, product_id) effectively.
+	// We handle them separately to avoid complexity.
 
-	_, err := db.DB.Exec(query, userID, item.ProductID, item.Quantity)
+	var query string
+	var err error
+
+	if userID != nil {
+		// Logged in user
+		query = `INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)
+		         ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`
+		_, err = db.DB.Exec(query, *userID, item.ProductID, item.Quantity)
+	} else {
+		// Guest
+		query = `INSERT INTO cart_items (session_id, product_id, quantity) VALUES (?, ?, ?)
+		         ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`
+		_, err = db.DB.Exec(query, sessionID, item.ProductID, item.Quantity)
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -34,33 +64,63 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Added to cart"})
 }
 
-// GetCart retrieves the user's cart
+// GetCart retrieves the user's or guest's cart
 func GetCart(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int) // Get user ID
+	userID, sessionID := getIdentity(r)
 
-	// Join with products table to get product details
-	query := `SELECT c.id, c.user_id, c.product_id, c.quantity,
-	                 p.id, p.name, p.price, p.image_url
-	          FROM cart_items c
-	          JOIN products p ON c.product_id = p.id
-	          WHERE c.user_id = ?`
+	if userID == nil && sessionID == "" {
+		// Return empty list if no identity
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]models.CartItem{})
+		return
+	}
 
-	rows, err := db.DB.Query(query, userID)
+	var rows *sql.Rows
+	var err error
+
+	if userID != nil {
+		query := `SELECT c.id, c.user_id, c.session_id, c.product_id, c.quantity,
+		                 p.id, p.name, p.price, p.image_url
+		          FROM cart_items c
+		          JOIN products p ON c.product_id = p.id
+		          WHERE c.user_id = ?`
+		rows, err = db.DB.Query(query, *userID)
+	} else {
+		query := `SELECT c.id, c.user_id, c.session_id, c.product_id, c.quantity,
+		                 p.id, p.name, p.price, p.image_url
+		          FROM cart_items c
+		          JOIN products p ON c.product_id = p.id
+		          WHERE c.session_id = ? AND c.user_id IS NULL`
+		rows, err = db.DB.Query(query, sessionID)
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var items []models.CartItem
+	items := []models.CartItem{}
 	for rows.Next() {
 		var item models.CartItem
 		var p models.Product
+		var uid sql.NullInt64 // temporary scanner
+		var sid sql.NullString // temporary scanner
+
 		// Scan
-		if err := rows.Scan(&item.ID, &item.UserID, &item.ProductID, &item.Quantity,
+		if err := rows.Scan(&item.ID, &uid, &sid, &item.ProductID, &item.Quantity,
 			&p.ID, &p.Name, &p.Price, &p.ImageURL); err != nil {
 			continue
 		}
+
+		if uid.Valid {
+			id := int(uid.Int64)
+			item.UserID = &id
+		}
+		if sid.Valid {
+			item.SessionID = sid.String
+		}
+
 		item.Product = p
 		items = append(items, item)
 	}

@@ -2,7 +2,6 @@
 import { onMounted } from 'vue';
 import { useCartStore } from '../stores/cart';
 import { useRouter } from 'vue-router';
-import Header from '../components/Header.vue';
 
 const cartStore = useCartStore();
 const router = useRouter();
@@ -17,56 +16,57 @@ const proceedToCheckout = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Header />
+  <div class="min-h-screen bg-[#F3F3F3] text-black">
     <div class="container mx-auto px-4 py-12">
-        <h1 class="text-3xl font-bold mb-8">Shopping Cart</h1>
+        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-neon-green inline-block pb-2">Keranjang Belanja</h1>
 
-        <div v-if="cartStore.items.length === 0" class="text-center py-12">
-            <p class="text-gray-600 mb-4">Your cart is empty.</p>
-            <router-link to="/" class="text-primary hover:underline">Continue Shopping</router-link>
+        <div v-if="cartStore.items.length === 0" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
+            <p class="text-gray-500 mb-6 text-xl">Keranjang anda kosong.</p>
+            <router-link to="/" class="text-neon-green font-bold text-lg hover:underline uppercase tracking-widest">Lanjut Belanja ></router-link>
         </div>
 
-        <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-10">
             <!-- Cart Items -->
-            <div class="lg:col-span-2 bg-white p-6 rounded shadow-sm">
+            <div class="lg:col-span-2 bg-white p-8 rounded-[2rem] shadow-lg">
                 <table class="w-full text-left">
                     <thead>
-                        <tr class="border-b">
-                            <th class="pb-4">Product</th>
-                            <th class="pb-4">Price</th>
-                            <th class="pb-4">Quantity</th>
-                            <th class="pb-4">Total</th>
+                        <tr class="border-b-2 border-gray-100">
+                            <th class="pb-6 font-bold text-gray-400 uppercase tracking-wider text-sm">Produk</th>
+                            <th class="pb-6 font-bold text-gray-400 uppercase tracking-wider text-sm">Harga</th>
+                            <th class="pb-6 font-bold text-gray-400 uppercase tracking-wider text-sm">Jumlah</th>
+                            <th class="pb-6 font-bold text-gray-400 uppercase tracking-wider text-sm">Total</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr v-for="item in cartStore.items" :key="item.id" class="border-b last:border-0">
-                            <td class="py-4 flex items-center space-x-4">
-                                <img :src="item.product.image_url || 'https://via.placeholder.com/50'" class="w-16 h-16 object-cover rounded">
-                                <span>{{ item.product.name }}</span>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr v-for="item in cartStore.items" :key="item.id">
+                            <td class="py-6 flex items-center space-x-6">
+                                <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+                                   <img :src="item.product.image_url || 'https://via.placeholder.com/150'" class="w-full h-full object-cover">
+                                </div>
+                                <span class="font-bold text-lg text-gray-800">{{ item.product.name }}</span>
                             </td>
-                            <td class="py-4">${{ item.product.price }}</td>
-                            <td class="py-4">{{ item.quantity }}</td>
-                            <td class="py-4 font-bold text-primary">${{ item.product.price * item.quantity }}</td>
+                            <td class="py-6 font-medium text-gray-600">RP {{ item.product.price.toLocaleString() }}</td>
+                            <td class="py-6 font-medium text-gray-600">{{ item.quantity }}</td>
+                            <td class="py-6 font-extrabold text-neon-green text-lg">RP {{ (item.product.price * item.quantity).toLocaleString() }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Summary -->
-            <div class="bg-white p-6 rounded shadow-sm h-fit">
-                <h2 class="text-xl font-bold mb-4">Cart Total</h2>
-                <div class="flex justify-between mb-4 border-b pb-4">
-                    <span>Subtotal:</span>
-                    <span class="font-bold">${{ cartStore.totalPrice }}</span>
+            <div class="bg-white p-8 rounded-[2rem] shadow-lg h-fit">
+                <h2 class="text-2xl font-bold mb-6">Total Belanja</h2>
+                <div class="flex justify-between mb-4 border-b border-gray-100 pb-4">
+                    <span class="text-gray-500">Subtotal:</span>
+                    <span class="font-bold text-gray-800">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                 </div>
-                <div class="flex justify-between mb-6 text-lg">
-                    <span>Total:</span>
-                    <span class="font-bold text-primary">${{ cartStore.totalPrice }}</span>
+                <div class="flex justify-between mb-8 text-xl">
+                    <span class="font-bold">Total:</span>
+                    <span class="font-extrabold text-neon-green">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                 </div>
 
-                <button @click="proceedToCheckout" class="w-full bg-primary text-white py-3 rounded hover:bg-orange-600 transition-colors">
-                    Proceed to Checkout
+                <button @click="proceedToCheckout" class="w-full bg-neon-green text-white py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                    Checkout Sekarang
                 </button>
             </div>
         </div>

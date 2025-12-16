@@ -1,64 +1,102 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useCartStore } from '../stores/cart';
 import { useRouter } from 'vue-router';
-import Header from '../components/Header.vue';
 
 const cartStore = useCartStore();
 const router = useRouter();
 
+const form = ref({
+    firstName: '',
+    lastName: '',
+    email: '',
+    address: '',
+    city: '',
+    phone: ''
+});
+
 const handleCheckout = async () => {
-    const success = await cartStore.checkout();
+    // Basic validation
+    if (!form.value.firstName || !form.value.email || !form.value.address) {
+        alert("Mohon lengkapi data diri anda.");
+        return;
+    }
+
+    const guestInfo = {
+        name: `${form.value.firstName} ${form.value.lastName}`,
+        email: form.value.email,
+        address: `${form.value.address}, ${form.value.city}`,
+        phone: form.value.phone
+    };
+
+    const success = await cartStore.checkout(guestInfo);
     if (success) {
-        alert("Order placed successfully!");
+        alert("Pesanan berhasil dibuat!");
         router.push('/');
     } else {
-        alert("Checkout failed.");
+        alert("Checkout gagal. Silakan coba lagi.");
     }
 };
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Header />
+  <div class="min-h-screen bg-[#F3F3F3] text-black">
     <div class="container mx-auto px-4 py-12">
-        <h1 class="text-3xl font-bold mb-8">Checkout</h1>
+        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-neon-green inline-block pb-2">Checkout</h1>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-             <!-- Billing Details Form (Mock) -->
-             <div class="bg-white p-6 rounded shadow-sm">
-                 <h2 class="text-xl font-bold mb-4">Billing Details</h2>
-                 <form class="space-y-4">
-                     <div class="grid grid-cols-2 gap-4">
-                         <input type="text" placeholder="First Name" class="border p-2 rounded w-full">
-                         <input type="text" placeholder="Last Name" class="border p-2 rounded w-full">
+             <!-- Billing Details Form -->
+             <div class="bg-white p-8 rounded-[2rem] shadow-lg">
+                 <h2 class="text-2xl font-bold mb-6">Informasi Pengiriman</h2>
+                 <form class="space-y-6" @submit.prevent="handleCheckout">
+                     <div class="grid grid-cols-2 gap-6">
+                         <div>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">Nama Depan</label>
+                             <input v-model="form.firstName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                         </div>
+                         <div>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">Nama Belakang</label>
+                             <input v-model="form.lastName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors">
+                         </div>
                      </div>
-                     <input type="text" placeholder="Company Name (Optional)" class="border p-2 rounded w-full">
-                     <input type="text" placeholder="Country" class="border p-2 rounded w-full">
-                     <input type="text" placeholder="Street Address" class="border p-2 rounded w-full">
-                     <input type="text" placeholder="City" class="border p-2 rounded w-full">
-                     <input type="text" placeholder="Postcode / ZIP" class="border p-2 rounded w-full">
-                     <input type="tel" placeholder="Phone" class="border p-2 rounded w-full">
-                     <input type="email" placeholder="Email" class="border p-2 rounded w-full">
+                     <div>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Email</label>
+                         <input v-model="form.email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                     </div>
+                     <div>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Alamat</label>
+                         <input v-model="form.address" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                     </div>
+                     <div class="grid grid-cols-2 gap-6">
+                         <div>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">Kota</label>
+                             <input v-model="form.city" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                         </div>
+                         <div>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">No. HP</label>
+                             <input v-model="form.phone" type="tel" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                         </div>
+                     </div>
                  </form>
              </div>
 
              <!-- Order Review -->
-             <div class="bg-white p-6 rounded shadow-sm h-fit">
-                 <h2 class="text-xl font-bold mb-4">Your Order</h2>
-                 <div class="space-y-4 mb-6">
-                     <div v-for="item in cartStore.items" :key="item.id" class="flex justify-between">
-                         <span>{{ item.product.name }} x {{ item.quantity }}</span>
-                         <span>${{ item.product.price * item.quantity }}</span>
+             <div class="bg-white p-8 rounded-[2rem] shadow-lg h-fit">
+                 <h2 class="text-2xl font-bold mb-6">Ringkasan Pesanan</h2>
+                 <div class="space-y-4 mb-8">
+                     <div v-for="item in cartStore.items" :key="item.id" class="flex justify-between items-center py-2 border-b border-gray-50">
+                         <span class="text-gray-700 font-medium">{{ item.product.name }} <span class="text-xs text-gray-400">x{{ item.quantity }}</span></span>
+                         <span class="font-bold">RP {{ (item.product.price * item.quantity).toLocaleString() }}</span>
                      </div>
                  </div>
-                 <div class="flex justify-between border-t pt-4 text-lg font-bold">
-                     <span>Total</span>
-                     <span class="text-primary">${{ cartStore.totalPrice }}</span>
+                 <div class="flex justify-between border-t border-dashed border-gray-300 pt-6 text-xl">
+                     <span class="font-bold">Total Pembayaran</span>
+                     <span class="font-extrabold text-neon-green">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                  </div>
 
-                 <div class="mt-6">
-                     <button @click="handleCheckout" class="w-full bg-primary text-white py-3 rounded hover:bg-orange-600 transition-colors">
-                         Place Order
+                 <div class="mt-8">
+                     <button @click="handleCheckout" class="w-full bg-neon-green text-white py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                         Buat Pesanan
                      </button>
                  </div>
              </div>

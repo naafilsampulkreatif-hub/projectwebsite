@@ -5,6 +5,7 @@ import RegisterView from '../views/RegisterView.vue'
 import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
 import AdminView from '../views/AdminView.vue'
+import OrdersView from '../views/OrdersView.vue' // New view
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -29,13 +30,18 @@ const router = createRouter({
       path: '/cart',
       name: 'cart',
       component: CartView,
-      meta: { requiresAuth: true }
+      // No auth required for guest cart
     },
     {
       path: '/checkout',
       name: 'checkout',
       component: CheckoutView,
-      meta: { requiresAuth: true }
+      // No auth required for guest checkout
+    },
+    {
+      path: '/orders',
+      name: 'orders',
+      component: OrdersView
     },
     {
       path: '/admin',

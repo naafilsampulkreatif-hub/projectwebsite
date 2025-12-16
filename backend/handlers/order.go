@@ -1,15 +1,30 @@
 package handlers // Package handlers
 
 import (
+	"database/sql"
 	"encoding/json" // JSON
 	"net/http" // HTTP
 	"ecommerce-backend/db" // DB
 	"ecommerce-backend/models" // Models
 )
 
+type CheckoutRequest struct {
+	GuestInfo map[string]interface{} `json:"guest_info"` // Generic map for guest info
+}
+
 // Checkout creates an order from the cart
 func Checkout(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int) // Get User ID
+	userID, sessionID := getIdentity(r)
+
+	if userID == nil && sessionID == "" {
+		http.Error(w, "User ID or Session ID required", http.StatusBadRequest)
+		return
+	}
+
+	var req CheckoutRequest
+	// For guests, we expect guest_info in body. For users, it might be optional or pre-filled.
+	// We decode body regardless.
+	json.NewDecoder(r.Body).Decode(&req)
 
 	// Start a transaction
 	tx, err := db.DB.Begin()
@@ -19,11 +34,21 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Get Cart Items
-	query := `SELECT c.product_id, c.quantity, p.price
-	          FROM cart_items c
-	          JOIN products p ON c.product_id = p.id
-	          WHERE c.user_id = ?`
-	rows, err := tx.Query(query, userID)
+	var rows *sql.Rows
+	if userID != nil {
+		query := `SELECT c.product_id, c.quantity, p.price
+		          FROM cart_items c
+		          JOIN products p ON c.product_id = p.id
+		          WHERE c.user_id = ?`
+		rows, err = tx.Query(query, *userID)
+	} else {
+		query := `SELECT c.product_id, c.quantity, p.price
+		          FROM cart_items c
+		          JOIN products p ON c.product_id = p.id
+		          WHERE c.session_id = ? AND c.user_id IS NULL`
+		rows, err = tx.Query(query, sessionID)
+	}
+
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,7 +78,14 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Create Order
-	res, err := tx.Exec("INSERT INTO orders (user_id, total_amount, status) VALUES (?, ?, ?)", userID, totalAmount, "pending")
+	var res sql.Result
+	if userID != nil {
+		res, err = tx.Exec("INSERT INTO orders (user_id, total_amount, status) VALUES (?, ?, ?)", *userID, totalAmount, "pending")
+	} else {
+		guestInfoJSON, _ := json.Marshal(req.GuestInfo)
+		res, err = tx.Exec("INSERT INTO orders (session_id, guest_info, total_amount, status) VALUES (?, ?, ?, ?)", sessionID, string(guestInfoJSON), totalAmount, "pending")
+	}
+
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -79,7 +111,12 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. Clear Cart
-	_, err = tx.Exec("DELETE FROM cart_items WHERE user_id = ?", userID)
+	if userID != nil {
+		_, err = tx.Exec("DELETE FROM cart_items WHERE user_id = ?", *userID)
+	} else {
+		_, err = tx.Exec("DELETE FROM cart_items WHERE session_id = ?", sessionID)
+	}
+
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -98,9 +135,23 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 
 // GetOrders retrieves orders for the user
 func GetOrders(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(int) // Get User ID
+	userID, sessionID := getIdentity(r)
 
-	rows, err := db.DB.Query("SELECT id, total_amount, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC", userID)
+	if userID == nil && sessionID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var rows *sql.Rows
+	var err error
+
+	if userID != nil {
+		rows, err = db.DB.Query("SELECT id, total_amount, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC", *userID)
+	} else {
+		// Guests can only see orders for their current session
+		rows, err = db.DB.Query("SELECT id, total_amount, status, created_at FROM orders WHERE session_id = ? ORDER BY created_at DESC", sessionID)
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
