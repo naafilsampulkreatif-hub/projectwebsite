@@ -32,12 +32,12 @@ export const useCartStore = defineStore('cart', {
     async checkout(guestInfo: any = null) {
       try {
         // Send guest_info if available
-        await api.post('/checkout', { guest_info: guestInfo });
+        const response = await api.post('/checkout', { guest_info: guestInfo });
         this.items = []; // Clear local cart
-        return true;
+        return response.data; // Return full data (including order_id)
       } catch (error) {
         console.error("Checkout failed", error);
-        return false;
+        throw error; // Throw to handle in view
       }
     }
   }

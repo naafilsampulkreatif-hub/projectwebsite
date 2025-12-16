@@ -4,14 +4,14 @@ import "time" // Import time package
 
 // Order struct represents a customer order
 type Order struct {
-	ID          int         `json:"id"`           // Unique identifier
-	UserID      *int        `json:"user_id"`      // ID of the user who placed the order (Nullable for guests)
-	SessionID   string      `json:"session_id"`   // Session ID for guest orders
-	GuestInfo   string      `json:"guest_info"`   // JSON string for guest details
-	TotalAmount float64     `json:"total_amount"` // Total cost of the order
-	Status      string      `json:"status"`       // Order status (pending, paid, etc.)
-	CreatedAt   time.Time   `json:"created_at"`   // Timestamp
-	Items       []OrderItem `json:"items"`        // List of items in the order
+	ID          int                    `json:"id"`           // Unique identifier
+	UserID      *int                   `json:"user_id"`      // ID of the user who placed the order (Nullable for guests)
+	SessionID   string                 `json:"session_id"`   // Session ID for guest orders
+	GuestInfo   interface{}            `json:"guest_info"`   // JSON string for guest details (interface{} to allow unmarshalling to map)
+	TotalAmount float64                `json:"total_amount"` // Total cost of the order
+	Status      string                 `json:"status"`       // Order status (pending, paid, etc.)
+	CreatedAt   time.Time              `json:"created_at"`   // Timestamp
+	Items       []OrderItem            `json:"items"`        // List of items in the order
 }
 
 // OrderItem struct represents a single item within an order

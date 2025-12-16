@@ -41,8 +41,10 @@ func main() {
 	hybridRouter.Use(middleware.OptionalAuthMiddleware)
 	hybridRouter.HandleFunc("/cart", handlers.GetCart).Methods("GET") // View Cart
 	hybridRouter.HandleFunc("/cart", handlers.AddToCart).Methods("POST") // Add to Cart
+	hybridRouter.HandleFunc("/cart/validate-stock", handlers.ValidateStock).Methods("GET") // Validate Stock
 	hybridRouter.HandleFunc("/checkout", handlers.Checkout).Methods("POST") // Checkout
 	hybridRouter.HandleFunc("/orders", handlers.GetOrders).Methods("GET") // My Orders (or Session Orders)
+	hybridRouter.HandleFunc("/orders/{id}/invoice", handlers.GetOrderInvoice).Methods("GET") // Get Invoice
 
 	// Protected Routes (Admin)
 	adminRouter := r.PathPrefix("/api/admin").Subrouter()

@@ -49,10 +49,21 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 		         ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`
 		_, err = db.DB.Exec(query, *userID, item.ProductID, item.Quantity)
 	} else {
-		// Guest
-		query = `INSERT INTO cart_items (session_id, product_id, quantity) VALUES (?, ?, ?)
-		         ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`
-		_, err = db.DB.Exec(query, sessionID, item.ProductID, item.Quantity)
+		// Guest - Fix for MySQL NULL unique constraint behavior
+		// Check if item exists first
+		var existingQty int
+		checkQuery := `SELECT quantity FROM cart_items WHERE session_id = ? AND product_id = ? AND user_id IS NULL`
+		err = db.DB.QueryRow(checkQuery, sessionID, item.ProductID).Scan(&existingQty)
+
+		if err == sql.ErrNoRows {
+			// Insert
+			insertQuery := `INSERT INTO cart_items (session_id, product_id, quantity) VALUES (?, ?, ?)`
+			_, err = db.DB.Exec(insertQuery, sessionID, item.ProductID, item.Quantity)
+		} else if err == nil {
+			// Update
+			updateQuery := `UPDATE cart_items SET quantity = quantity + ? WHERE session_id = ? AND product_id = ? AND user_id IS NULL`
+			_, err = db.DB.Exec(updateQuery, item.Quantity, sessionID, item.ProductID)
+		}
 	}
 
 	if err != nil {
@@ -127,4 +138,69 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(items)
+}
+
+// ValidateStock checks if the items in the cart have sufficient stock
+func ValidateStock(w http.ResponseWriter, r *http.Request) {
+	userID, sessionID := getIdentity(r)
+
+	if userID == nil && sessionID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var rows *sql.Rows
+	var err error
+
+	// Query to get cart quantity and actual product stock
+	query := `SELECT c.product_id, c.quantity, p.name, p.stock
+	          FROM cart_items c
+	          JOIN products p ON c.product_id = p.id
+	          WHERE `
+
+	if userID != nil {
+		query += `c.user_id = ?`
+		rows, err = db.DB.Query(query, *userID)
+	} else {
+		query += `c.session_id = ? AND c.user_id IS NULL`
+		rows, err = db.DB.Query(query, sessionID)
+	}
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type StockIssue struct {
+		ProductName string `json:"product_name"`
+		Requested   int    `json:"requested"`
+		Available   int    `json:"available"`
+	}
+
+	issues := []StockIssue{}
+	valid := true
+
+	for rows.Next() {
+		var pid, reqQty, stock int
+		var name string
+		if err := rows.Scan(&pid, &reqQty, &name, &stock); err != nil {
+			continue
+		}
+
+		if reqQty > stock {
+			valid = false
+			issues = append(issues, StockIssue{
+				ProductName: name,
+				Requested:   reqQty,
+				Available:   stock,
+			})
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"valid":  valid,
+		"issues": issues,
+	})
 }

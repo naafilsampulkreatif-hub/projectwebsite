@@ -3,9 +3,12 @@ package handlers // Package handlers
 import (
 	"database/sql"
 	"encoding/json" // JSON
+	"fmt" // Formatting
 	"net/http" // HTTP
 	"ecommerce-backend/db" // DB
 	"ecommerce-backend/models" // Models
+
+	"github.com/gorilla/mux" // Router
 )
 
 type CheckoutRequest struct {
@@ -33,19 +36,20 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Get Cart Items
+	// 1. Get Cart Items and Check Stock (LOCKING ROWS)
 	var rows *sql.Rows
 	if userID != nil {
-		query := `SELECT c.product_id, c.quantity, p.price
+		// Uses FOR UPDATE to lock rows during transaction
+		query := `SELECT c.product_id, c.quantity, p.price, p.stock, p.name
 		          FROM cart_items c
 		          JOIN products p ON c.product_id = p.id
-		          WHERE c.user_id = ?`
+		          WHERE c.user_id = ? FOR UPDATE`
 		rows, err = tx.Query(query, *userID)
 	} else {
-		query := `SELECT c.product_id, c.quantity, p.price
+		query := `SELECT c.product_id, c.quantity, p.price, p.stock, p.name
 		          FROM cart_items c
 		          JOIN products p ON c.product_id = p.id
-		          WHERE c.session_id = ? AND c.user_id IS NULL`
+		          WHERE c.session_id = ? AND c.user_id IS NULL FOR UPDATE`
 		rows, err = tx.Query(query, sessionID)
 	}
 
@@ -59,15 +63,40 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	var items []models.OrderItem
 	var totalAmount float64 = 0
 
+	// Use a struct to hold temporary data including stock
+	type CartItemDetail struct {
+		ProductID int
+		Quantity  int
+		Price     float64
+		Stock     int
+		Name      string
+	}
+	var cartDetails []CartItemDetail
+
 	for rows.Next() {
-		var item models.OrderItem
-		if err := rows.Scan(&item.ProductID, &item.Quantity, &item.Price); err != nil {
+		var d CartItemDetail
+		if err := rows.Scan(&d.ProductID, &d.Quantity, &d.Price, &d.Stock, &d.Name); err != nil {
 			tx.Rollback()
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		items = append(items, item)
-		totalAmount += item.Price * float64(item.Quantity)
+
+		// Check Stock
+		if d.Quantity > d.Stock {
+			rows.Close()
+			tx.Rollback()
+			http.Error(w, fmt.Sprintf("Stok tidak cukup untuk produk: %s (Sisa: %d)", d.Name, d.Stock), http.StatusConflict)
+			return
+		}
+
+		cartDetails = append(cartDetails, d)
+
+		items = append(items, models.OrderItem{
+			ProductID: d.ProductID,
+			Quantity:  d.Quantity,
+			Price:     d.Price,
+		})
+		totalAmount += d.Price * float64(d.Quantity)
 	}
 	rows.Close() // Close before next query
 
@@ -93,17 +122,32 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 	orderID, _ := res.LastInsertId()
 
-	// 3. Create Order Items
-	stmt, err := tx.Prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)")
+	// 3. Create Order Items and Deduct Stock
+	stmtItems, err := tx.Prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer stmt.Close()
+	defer stmtItems.Close()
+
+	stmtStock, err := tx.Prepare("UPDATE products SET stock = stock - ? WHERE id = ?")
+	if err != nil {
+		tx.Rollback()
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer stmtStock.Close()
 
 	for _, item := range items {
-		if _, err := stmt.Exec(orderID, item.ProductID, item.Quantity, item.Price); err != nil {
+		// Insert Item
+		if _, err := stmtItems.Exec(orderID, item.ProductID, item.Quantity, item.Price); err != nil {
+			tx.Rollback()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Deduct Stock
+		if _, err := stmtStock.Exec(item.Quantity, item.ProductID); err != nil {
 			tx.Rollback()
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -131,6 +175,117 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{"message": "Order placed", "order_id": orderID})
+}
+
+// GetOrderInvoice retrieves a specific order invoice
+func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderID := vars["id"]
+	userID, sessionID := getIdentity(r)
+
+	// Fetch Order
+	var o models.Order
+	var guestInfoJSON []byte
+	var uid sql.NullInt64
+	var sid sql.NullString
+
+	query := `SELECT id, user_id, session_id, total_amount, status, guest_info, created_at
+	          FROM orders WHERE id = ?`
+
+	err := db.DB.QueryRow(query, orderID).Scan(&o.ID, &uid, &sid, &o.TotalAmount, &o.Status, &guestInfoJSON, &o.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Order not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Authorization Check
+	// 1. If order belongs to user, check userID
+	// 2. If order belongs to session, check sessionID
+	// 3. Or if Admin (not implemented here yet, but middleware handles admin routes separately)
+
+	// Simplify: If userID matches, OK. If sessionID matches, OK.
+	authorized := false
+	if uid.Valid && userID != nil && int(uid.Int64) == *userID {
+		authorized = true
+	} else if sid.Valid && sid.String == sessionID {
+		authorized = true
+	}
+
+	if !authorized {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Parse Guest Info if exists
+	if len(guestInfoJSON) > 0 {
+		var g map[string]interface{}
+		json.Unmarshal(guestInfoJSON, &g)
+		// Assuming models.Order GuestInfo is map[string]interface{}
+		// If it's string, we keep it as string. But in models/order.go it might be different.
+		// Let's check models.Order definition or cast appropriately.
+		o.GuestInfo = g
+	}
+
+	// Fetch Order Items
+	rows, err := db.DB.Query(`SELECT oi.product_id, oi.quantity, oi.price, p.name
+	                          FROM order_items oi
+	                          JOIN products p ON oi.product_id = p.id
+	                          WHERE oi.order_id = ?`, o.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item models.OrderItem
+		var name string
+		rows.Scan(&item.ProductID, &item.Quantity, &item.Price, &name)
+
+		// We can add product name to the response struct if we want,
+		// but models.OrderItem might not have it.
+		// For simplicity, let's create a response struct or map.
+		// Re-using OrderItem but attaching name via a map logic or modifying the struct is better.
+		// Let's rely on frontend fetching product details or just return a custom map.
+
+		// Actually, let's just make a composite struct for the response
+	}
+
+	// ... Refetching to be cleaner
+	type InvoiceItem struct {
+		Name string `json:"name"`
+		Quantity int `json:"quantity"`
+		Price float64 `json:"price"`
+		Total float64 `json:"total"`
+	}
+
+	var invoiceItems []InvoiceItem
+
+	// Reset rows
+	rows, _ = db.DB.Query(`SELECT oi.quantity, oi.price, p.name
+	                          FROM order_items oi
+	                          JOIN products p ON oi.product_id = p.id
+	                          WHERE oi.order_id = ?`, o.ID)
+	defer rows.Close()
+
+	for rows.Next() {
+		var i InvoiceItem
+		rows.Scan(&i.Quantity, &i.Price, &i.Name)
+		i.Total = i.Price * float64(i.Quantity)
+		invoiceItems = append(invoiceItems, i)
+	}
+
+	response := map[string]interface{}{
+		"order": o,
+		"items": invoiceItems,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // GetOrders retrieves orders for the user
