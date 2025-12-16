@@ -1,67 +1,91 @@
-# Molla Ecommerce (Go + Vue)
+Dokumentasi Perencanaan Pembuatan Web Ecommerce Night Stalkers
+==============================================================
 
-A responsive ecommerce website built with a Golang backend and Vue.js frontend, featuring a multi-level admin dashboard, JWT authentication, and full shopping cart functionality.
+1\. Gambaran Umum Proyek
+------------------------
 
-## Prerequisites
+### 1.1 Deskripsi Proyek
 
-- Go 1.22+
-- Node.js 18+
-- MySQL 8.0+
+**Night Stalkers** adalah platform e-commerce modern untuk penjualan buku komik dan novel yang mengutamakan kecepatan transaksi. Berbeda dengan e-commerce tradisional, sistem ini menggunakan pendekatan **Guest Checkout & Session-Based**. Pengunjung dapat langsung berbelanja tanpa perlu mendaftar akun (Login), namun data diri wajib diisi pada saat proses penyelesaian pesanan (Checkout).
 
-## Setup
+### 1.2 Tujuan Pengembangan
 
-### Database
+*   Memberikan pengalaman belanja yang instan tanpa hambatan registrasi.
+    
+*   Mengelola keranjang belanja secara _real-time_ berbasis sesi pengunjung.
+    
+*   Menyediakan data transaksi yang lengkap bagi admin untuk keperluan evaluasi meskipun user tidak memiliki akun tetap.
+    
 
-1. Create a MySQL database named `ecommerce`.
-2. Run the initialization script:
-   ```bash
-   mysql -u root -p ecommerce < backend/schema.sql
-   ```
-3. Insert an admin user manually into the `users` table if you want to access the Admin Dashboard immediately (role='admin').
+### 1.3 Target Pengguna
 
-### Backend
+*   **Pengunjung (Guest User):** Pengguna yang dapat langsung memilih produk dan melakukan checkout.
+    
+*   **Administrator:** Pengelola yang memiliki akses penuh untuk memantau data pesanan dan evaluasi performa toko.
+    
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   go mod tidy
-   ```
-3. Configure environment:
-   Copy `.env.example` to `.env` and update your MySQL password:
-   ```bash
-   cp .env.example .env
-   # Edit .env and set DB_PASS=your_real_password
-   ```
+2\. Alur Kerja / Flowchart (Sistem Per Sesi)
+--------------------------------------------
 
-4. Run the server:
-   ```bash
-   go run main.go
-   ```
-   Server runs on `http://localhost:8080`.
+### 2.1 Alur Belanja Pelanggan (Tanpa Login)
 
-### Frontend
+1.  **Start:** Pengunjung membuka website Night Stalkers.
+    
+2.  **Process:** Pengunjung menjelajahi katalog dan menambahkan produk ke **Keranjang Belanja (Session-based)**.
+    
+3.  **Process:** Pengunjung menekan tombol **Checkout**.
+    
+4.  **Input:** Pengunjung memasukkan data diri (Nama, Alamat, No. HP, Email) untuk pengiriman.
+    
+5.  **Validation:** Sistem memvalidasi kelengkapan data dan stok barang.
+    
+6.  **Decision:** \* **Jika Valid:** Data pesanan dan data diri pengunjung disimpan ke **Database MySQL** untuk evaluasi & proses kirim.
+    
+    *   **Jika Tidak:** Kembali ke form data diri.
+        
+7.  **Process:** Sesi belanja berakhir (data di browser akan hilang jika tab ditutup), namun data permanen sudah aman di database admin.
+    
+8.  **End.**
+    
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-   App runs on `http://localhost:5173`.
+3\. Spesifikasi Teknis (Tech Stack)
+-----------------------------------
 
-## Features
+### A. Perangkat Lunak (Software)
 
-- **Authentication**: Register/Login with JWT.
-- **RBAC**: Admin vs Customer roles.
-- **Admin Dashboard**: Manage products (CRUD).
-- **Shopping**: Browse products, Add to Cart, Checkout.
-- **Design**: Responsive UI with TailwindCSS.
+*   **Frontend:**
+    
+    *   **Framework:** Vue.js 3 (Vite).
+        
+    *   **State Management:** Pinia atau Vuex (untuk menyimpan data keranjang selama sesi aktif).
+        
+    *   **Styling:** TailwindCSS (Tema: Night Stalkers - Neon Green & Dark).
+        
+*   **Backend:**
+    
+    *   **Bahasa:** Go (Golang) 1.22+.
+        
+    *   **Framework:** Gin Web Framework.
+        
+    *   **Session Management:** Menggunakan UUID atau Cookie-based session untuk melacak keranjang pengunjung anonim.
+        
+*   **Database:**
+    
+    *   **Engine:** MySQL.
+        
+    *   **Struktur:** Tabel Orders menyimpan detail pembeli meskipun mereka tidak memiliki ID User tetap.
+        
+
+### B. Perangkat Keras Pengembangan (Hardware)
+
+*   **Processor:** Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz.
+    
+*   **RAM:** 16.0 GB.
+    
+*   **OS:** Windows 11 / Linux.
+    
+
+4\. Fitur Utama & Evaluasi Data
+-------------------------------
+
+**FiturLogika KerjaManfaat EvaluasiGuest Checkout**User mengisi form identitas hanya saat akan membayar.Mendapatkan data profil pembeli tanpa memaksa registrasi.**Session Cart**Keranjang belanja disimpan di memori browser/sesi backend.Menganalisis produk apa yang sering dimasukkan keranjang (meskipun tidak jadi beli).**Data Persistence**Setelah checkout, data diri masuk ke tabel Guest\_Orders.Admin tetap bisa melakukan _follow-up_ atau analisis tren penjualan.**Admin Dashboard**Panel kendali untuk melihat semua transaksi masuk.Memantau perputaran stok secara _real-time_.
