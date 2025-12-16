@@ -1,4 +1,4 @@
-![nightstalkers_flowchart_svg](https://github.com/user-attachments/assets/1a318aba-5b87-4a4a-ae6e-b40bccccc9de)Dokumentasi Perencanaan Pembuatan Web Ecommerce Night Stalkers
+![nightstalkers_flowchart_svg](https://github.com/user-attachments/assets/524a8232-02d9-4a79-b8ad-7c31f7819dde)Ecommerce Night Stalkers
 ==============================================================
 
 1\. Gambaran Umum Proyek
@@ -48,7 +48,7 @@
 8.  **End.**
     
 
-![Uploading nightstal<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 2800" style="background: white;">
+![Upload<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 2800" style="background: white;">
   <defs>
     <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
       <polygon points="0 0, 10 3, 0 6" fill="#000" />
@@ -253,7 +253,7 @@
   <rect x="450" y="2170" width="300" height="60" rx="30" class="box"/>
   <text x="600" y="2205" class="text">End</text>
 
-</svg>kers_flowchart_svg.svg…]()
+</svg>ing nightstalkers_flowchart_svg.svg…]()
 
 
 3\. Spesifikasi Teknis (Tech Stack)
@@ -303,4 +303,5 @@ User mengisi form identitas hanya saat akan membayar. Mendapatkan data profil pe
 
 **Setelah checkout, data diri masuk ke tabel Guest\_Orders.Admin tetap bisa melakukan _follow-up_ atau analisis tren penjualan.
 
-**Admin Dashboard**Panel kendali untuk melihat semua transaksi masuk.Memantau perputaran stok secara _real-time_.
+**Admin Dashboard**
+Panel kendali untuk melihat semua transaksi masuk.Memantau perputaran stok secara _real-time_.
