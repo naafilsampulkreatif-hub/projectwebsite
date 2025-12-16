@@ -46,9 +46,6 @@
 8.  **End.**
     
 
-[Document 2.pdf](https://github.com/user-attachments/files/24186546/Document.2.pdf)
-
-
 
 3\. Spesifikasi Teknis (Tech Stack)
 -----------------------------------
