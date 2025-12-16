@@ -1,0 +1,93 @@
+package handlers // Package handlers
+
+import (
+	"database/sql" // Database interface
+	"encoding/json" // JSON encoding/decoding
+	"net/http" // HTTP server
+	"ecommerce-backend/db" // Import our DB package
+	"ecommerce-backend/models" // Import our models
+	"ecommerce-backend/utils" // Import utils
+	"golang.org/x/crypto/bcrypt" // Bcrypt for password hashing
+)
+
+// Register handler for creating a new user
+func Register(w http.ResponseWriter, r *http.Request) {
+	var req models.RegisterRequest // Declare request struct
+
+	// Decode the JSON body into the struct
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Error processing password", http.StatusInternalServerError)
+		return
+	}
+
+	// Insert user into database
+	// Role defaults to 'customer'. Admin must be set manually in DB for now or via special endpoint
+	query := "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)"
+	_, err = db.DB.Exec(query, req.Name, req.Email, string(hashedPassword), "customer")
+
+	if err != nil {
+		// Check for duplicate entry (assuming email is unique)
+		http.Error(w, "Error registering user: " + err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated) // Set status to 201 Created
+	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"}) // Return success JSON
+}
+
+// Login handler for authenticating a user
+func Login(w http.ResponseWriter, r *http.Request) {
+	var req models.LoginRequest // Declare request struct
+
+	// Decode the JSON body
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	// Query the user by email
+	var user models.User
+	query := "SELECT id, name, email, password, role FROM users WHERE email = ?"
+	err := db.DB.QueryRow(query, req.Email).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role)
+
+	if err == sql.ErrNoRows { // If no user found
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	} else if err != nil { // Other DB error
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Compare the stored hashed password with the provided password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil { // If passwords don't match
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
+
+	// Generate JWT token
+	token, err := utils.GenerateToken(user.ID, user.Role)
+	if err != nil {
+		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		return
+	}
+
+	// Return the token and user info
+	response := models.LoginResponse{
+		Token: token,
+		User:  user,
+	}
+
+	// Don't send the password back!
+	response.User.Password = ""
+
+	w.Header().Set("Content-Type", "application/json") // Set content type
+	json.NewEncoder(w).Encode(response) // Encode response
+}
