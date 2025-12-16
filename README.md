@@ -1,5 +1,3 @@
-Dokumentasi Perencanaan Pembuatan Web Ecommerce Night Stalkers
-==============================================================
 
 1\. Gambaran Umum Proyek
 ------------------------
@@ -48,6 +46,7 @@ Dokumentasi Perencanaan Pembuatan Web Ecommerce Night Stalkers
 8.  **End.**
     
 
+
 3\. Spesifikasi Teknis (Tech Stack)
 -----------------------------------
 
@@ -95,4 +94,5 @@ User mengisi form identitas hanya saat akan membayar. Mendapatkan data profil pe
 
 **Setelah checkout, data diri masuk ke tabel Guest\_Orders.Admin tetap bisa melakukan _follow-up_ atau analisis tren penjualan.
 
-**Admin Dashboard**Panel kendali untuk melihat semua transaksi masuk.Memantau perputaran stok secara _real-time_.
+**Admin Dashboard**
+Panel kendali untuk melihat semua transaksi masuk.Memantau perputaran stok secara _real-time_.
