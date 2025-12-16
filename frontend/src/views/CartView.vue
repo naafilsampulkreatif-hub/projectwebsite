@@ -65,7 +65,7 @@ const proceedToCheckout = () => {
                     <span class="font-extrabold text-neon-green">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                 </div>
 
-                <button @click="proceedToCheckout" class="w-full bg-neon-green text-white py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                <button @click="proceedToCheckout" class="w-full bg-neon-green text-black py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
                     Checkout Sekarang
                 </button>
             </div>

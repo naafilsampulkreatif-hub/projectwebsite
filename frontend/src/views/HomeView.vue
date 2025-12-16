@@ -127,7 +127,7 @@ const getImageUrl = (url: string) => url || 'https://via.placeholder.com/300x200
                 <h3 class="font-bold text-xl mb-2 text-gray-800">{{ product.name }}</h3>
                 <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ product.description }}</p>
                 <div class="text-neon-green font-extrabold text-2xl mb-6">RP {{ product.price.toLocaleString() }}</div>
-                <button @click="addToCart(product)" class="bg-neon-green text-white px-8 py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                <button @click="addToCart(product)" class="bg-neon-green text-black px-8 py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
                    Beli
                 </button>
              </div>

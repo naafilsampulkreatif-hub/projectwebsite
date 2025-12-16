@@ -95,7 +95,7 @@ const handleCheckout = async () => {
                  </div>
 
                  <div class="mt-8">
-                     <button @click="handleCheckout" class="w-full bg-neon-green text-white py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                     <button @click="handleCheckout" class="w-full bg-neon-green text-black py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
                          Buat Pesanan
                      </button>
                  </div>

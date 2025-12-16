@@ -15,7 +15,7 @@ func main() {
 	dbUser := os.Getenv("DB_USER")
 	if dbUser == "" { dbUser = "root" }
 	dbPass := os.Getenv("DB_PASS")
-	if dbPass == "" { dbPass = "" }
+	if dbPass == "" { dbPass = "password" }
 	dbHost := os.Getenv("DB_HOST")
 	if dbHost == "" { dbHost = "127.0.0.1" }
 	dbPort := os.Getenv("DB_PORT")

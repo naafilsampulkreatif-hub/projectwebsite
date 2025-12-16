@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
-import Header from '../components/Header.vue';
 
 const email = ref('');
 const password = ref('');
@@ -14,39 +13,45 @@ const handleLogin = async () => {
   error.value = '';
   const success = await authStore.login({ email: email.value, password: password.value });
   if (success) {
-    router.push('/');
+    if (authStore.isAdmin) {
+      router.push('/admin');
+    } else {
+      router.push('/');
+    }
   } else {
-    error.value = 'Invalid credentials';
+    error.value = 'Email atau Password salah.';
   }
 };
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <Header />
-    <div class="container mx-auto px-4 py-16 flex justify-center">
-        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-6 text-center">Login</h1>
+  <div class="min-h-screen bg-[#F3F3F3] text-black flex items-center justify-center">
+    <div class="w-full max-w-md px-4">
+        <div class="bg-white p-10 rounded-[2rem] shadow-xl">
+            <h1 class="text-3xl font-extrabold mb-8 text-center text-neon-green">LOGIN</h1>
 
-            <form @submit.prevent="handleLogin" class="space-y-4">
+            <form @submit.prevent="handleLogin" class="space-y-6">
                 <div>
-                    <label class="block text-gray-700 mb-2">Email address</label>
-                    <input v-model="email" type="email" class="w-full border p-2 rounded focus:border-primary outline-none" required>
+                    <label class="block text-sm font-bold mb-2 text-gray-500">Email Address</label>
+                    <input v-model="email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" placeholder="user@example.com" required>
                 </div>
                 <div>
-                    <label class="block text-gray-700 mb-2">Password</label>
-                    <input v-model="password" type="password" class="w-full border p-2 rounded focus:border-primary outline-none" required>
+                    <label class="block text-sm font-bold mb-2 text-gray-500">Password</label>
+                    <input v-model="password" type="password" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" placeholder="••••••••" required>
                 </div>
 
-                <div v-if="error" class="text-red-500 text-sm">{{ error }}</div>
+                <div v-if="error" class="text-red-500 text-sm font-bold text-center">{{ error }}</div>
 
-                <button type="submit" class="w-full bg-primary text-white py-2 rounded hover:bg-orange-600 transition-colors">
-                    Log In
+                <button type="submit" class="w-full bg-neon-green text-black py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                    Masuk
                 </button>
             </form>
 
-            <p class="mt-4 text-center text-sm text-gray-600">
-                Don't have an account? <router-link to="/register" class="text-primary hover:underline">Register</router-link>
+            <p class="mt-8 text-center text-sm text-gray-500">
+                Belum punya akun? <router-link to="/register" class="text-neon-green font-bold hover:underline">Daftar Disini</router-link>
+            </p>
+             <p class="mt-2 text-center text-sm text-gray-400">
+                <router-link to="/" class="hover:underline">Kembali ke Home</router-link>
             </p>
         </div>
     </div>
