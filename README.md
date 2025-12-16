@@ -47,76 +47,71 @@ Berikut adalah deskripsi alur untuk dua fitur kritis (Login User dan Checkout) d
 
 <img width="2626" height="2384" alt="codetoflow" src="https://github.com/user-attachments/assets/62a524c6-595d-49ee-b851-36873d4f0e75" />
 
-NightStalkers Ecommerce (Go + Vue)
-Situs web e-commerce responsif yang dibangun dengan backend Golang dan frontend Vue.js, dilengkapi dengan dashboard admin multi-level, autentikasi JWT, dan fungsi keranjang belanja lengkap.
 
-Prasyarat
-Go 1.22+
+# Night Stalkers Ecommerce (Go + Vue)
 
-Node.js 18+
+Sebuah situs web e-commerce responsif yang dibangun dengan backend Golang dan frontend Vue.js, menampilkan dasbor admin multi-level, otentikasi JWT, dan fungsionalitas keranjang belanja lengkap.
 
-MySQL 8.0+
+## Prasyarat
 
-Pengaturan (Setup)
-Database
-Buat database MySQL dengan nama ecommerce.
+- Go 1.22+
+- Node.js 18+
+- MySQL 8.0+
 
-Jalankan skrip inisialisasi:
+## Setup
 
-Bash
+### Database
 
-mysql -u root -p ecommerce < backend/schema.sql
-Tambahkan pengguna admin secara manual ke dalam tabel users jika Anda ingin segera mengakses Admin Dashboard (setel role='admin').
+1. Create a MySQL database named `ecommerce`.
+2. Run the initialization script:
+   ```bash
+   mysql -u root -p ecommerce < backend/schema.sql
+   ```
+3. Masukkan pengguna admin secara manual ke dalam `users` tabel jika Anda ingin mengakses Dasbor Admin segera (role='admin').
 
-Backend
-Masuk ke direktori backend:
+### Backend
 
-Bash
+1. Masuk ke direktori backend:
+   ```bash
+   cd backend
+   ```
+2. Instal dependensi:
+   ```bash
+   go mod tidy
+   ```
+3. Konfigurasi lingkungan:
+   Copy `.env.example` to `.env` dan perbarui kata sandi MySQL Anda:
+   ```bash
+   cp .env.example .env
+   # Edit .env and set DB_PASS=your_real_password
+   ```
 
-cd backend
-Instal dependensi:
+4. Jalankan servernya:
+   ```bash
+   go run main.go
+   ```
+   Server berjalan `http://localhost:8080`.
 
-Bash
+### Frontend
 
-go mod tidy
-Konfigurasi lingkungan (environment): Salin .env.example menjadi .env dan perbarui kata sandi MySQL Anda:
+1. Masuk ke direktori frontend:
+   ```bash
+   cd frontend
+   ```
+2. Instal dependensi:
+   ```bash
+   npm install
+   ```
+3. Jalankan server pengembangan:
+   ```bash
+   npm run dev
+   ```
+   Aplikasi berjalan `http://localhost:5173`.
 
-Bash
+## Fitur-fitur
 
-cp .env.example .env
-# Edit .env dan setel DB_PASS=kata_sandi_asli_anda
-Jalankan server:
-
-Bash
-
-go run main.go
-Server akan berjalan di http://localhost:8080.
-
-Frontend
-Masuk ke direktori frontend:
-
-Bash
-
-cd frontend
-Instal dependensi:
-
-Bash
-
-npm install
-Jalankan server pengembangan:
-
-Bash
-
-npm run dev
-Aplikasi akan berjalan di http://localhost:5173.
-
-Fitur
-Autentikasi: Registrasi/Login menggunakan JWT.
-
-RBAC (Role-Based Access Control): Perbedaan peran antara Admin dan Pelanggan.
-
-Admin Dashboard: Mengelola produk (CRUD: Tambah, Baca, Ubah, Hapus).
-
-Belanja: Menjelajahi produk, Tambah ke Keranjang, dan Checkout.
-
-Desain: Antarmuka pengguna (UI) responsif menggunakan TailwindCSS.
+- **Otentikasi**: Register/Login dengan JWT.
+- **RBAC**: Peran Admin vs Pelanggan.
+- **Admin Dashboard**: Kelola produk (CRUD).
+- **belanja**: Telusuri produk, Tambahkan ke Keranjang, Lakukan Pembayaran.
+- **desain**: Responsive UI dengan TailwindCSS.
