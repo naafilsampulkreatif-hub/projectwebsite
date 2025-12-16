@@ -88,4 +88,11 @@ Dokumentasi Perencanaan Pembuatan Web Ecommerce Night Stalkers
 4\. Fitur Utama & Evaluasi Data
 -------------------------------
 
-**FiturLogika KerjaManfaat EvaluasiGuest Checkout**User mengisi form identitas hanya saat akan membayar.Mendapatkan data profil pembeli tanpa memaksa registrasi.**Session Cart**Keranjang belanja disimpan di memori browser/sesi backend.Menganalisis produk apa yang sering dimasukkan keranjang (meskipun tidak jadi beli).**Data Persistence**Setelah checkout, data diri masuk ke tabel Guest\_Orders.Admin tetap bisa melakukan _follow-up_ atau analisis tren penjualan.**Admin Dashboard**Panel kendali untuk melihat semua transaksi masuk.Memantau perputaran stok secara _real-time_.
+**FiturLogika KerjaManfaat EvaluasiGuest Checkout**
+User mengisi form identitas hanya saat akan membayar. Mendapatkan data profil pembeli tanpa memaksa registrasi.
+
+**Session Cart**Keranjang belanja disimpan di memori browser/sesi backend. Menganalisis produk apa yang sering dimasukkan keranjang (meskipun tidak jadi beli).**Data Persistence
+
+**Setelah checkout, data diri masuk ke tabel Guest\_Orders.Admin tetap bisa melakukan _follow-up_ atau analisis tren penjualan.
+
+**Admin Dashboard**Panel kendali untuk melihat semua transaksi masuk.Memantau perputaran stok secara _real-time_.
