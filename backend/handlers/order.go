@@ -2,11 +2,11 @@ package handlers // Package handlers
 
 import (
 	"database/sql"
-	"encoding/json" // JSON
-	"fmt" // Formatting
-	"net/http" // HTTP
-	"ecommerce-backend/db" // DB
+	"ecommerce-backend/db"     // DB
 	"ecommerce-backend/models" // Models
+	"encoding/json"            // JSON
+	"fmt"                      // Formatting
+	"net/http"                 // HTTP
 
 	"github.com/gorilla/mux" // Router
 )
@@ -257,10 +257,10 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 
 	// ... Refetching to be cleaner
 	type InvoiceItem struct {
-		Name string `json:"name"`
-		Quantity int `json:"quantity"`
-		Price float64 `json:"price"`
-		Total float64 `json:"total"`
+		Name     string  `json:"name"`
+		Quantity int     `json:"quantity"`
+		Price    float64 `json:"price"`
+		Total    float64 `json:"total"`
 	}
 
 	var invoiceItems []InvoiceItem
@@ -290,35 +290,86 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 
 // GetOrders retrieves orders for the user
 func GetOrders(w http.ResponseWriter, r *http.Request) {
-	userID, sessionID := getIdentity(r)
+	// This system is session-based and does not provide persistent order history to users.
+	// Return an empty list so users have no visible order history.
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode([]models.Order{})
+}
 
-	if userID == nil && sessionID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var rows *sql.Rows
-	var err error
-
-	if userID != nil {
-		rows, err = db.DB.Query("SELECT id, total_amount, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC", *userID)
-	} else {
-		// Guests can only see orders for their current session
-		rows, err = db.DB.Query("SELECT id, total_amount, status, created_at FROM orders WHERE session_id = ? ORDER BY created_at DESC", sessionID)
-	}
-
+// AdminGetOrders returns all orders for admin dashboard
+func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
+	// Admin middleware already ensured the user is admin
+	rows, err := db.DB.Query(`SELECT id, user_id, session_id, guest_info, total_amount, status, created_at FROM orders ORDER BY created_at DESC`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var orders []models.Order
+	type OrderResponse struct {
+		ID          int                      `json:"id"`
+		UserID      *int                     `json:"user_id"`
+		SessionID   string                   `json:"session_id"`
+		GuestInfo   interface{}              `json:"guest_info"`
+		TotalAmount float64                  `json:"total_amount"`
+		Status      string                   `json:"status"`
+		CreatedAt   string                   `json:"created_at"`
+		Items       []map[string]interface{} `json:"items"`
+		User        *map[string]interface{}  `json:"user,omitempty"`
+	}
+
+	var orders []OrderResponse
+
 	for rows.Next() {
-		var o models.Order
-		if err := rows.Scan(&o.ID, &o.TotalAmount, &o.Status, &o.CreatedAt); err != nil {
+		var o OrderResponse
+		var guestJSON []byte
+		var uid sql.NullInt64
+		var sid sql.NullString
+
+		if err := rows.Scan(&o.ID, &uid, &sid, &guestJSON, &o.TotalAmount, &o.Status, &o.CreatedAt); err != nil {
 			continue
 		}
+
+		if uid.Valid {
+			id := int(uid.Int64)
+			o.UserID = &id
+		}
+		if sid.Valid {
+			o.SessionID = sid.String
+		}
+
+		if len(guestJSON) > 0 {
+			var gi map[string]interface{}
+			json.Unmarshal(guestJSON, &gi)
+			o.GuestInfo = gi
+		}
+
+		// Fetch items
+		itemRows, err := db.DB.Query(`SELECT oi.quantity, oi.price, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?`, o.ID)
+		if err == nil {
+			var items []map[string]interface{}
+			for itemRows.Next() {
+				var qty int
+				var price float64
+				var name string
+				itemRows.Scan(&qty, &price, &name)
+				items = append(items, map[string]interface{}{"name": name, "quantity": qty, "price": price, "total": price * float64(qty)})
+			}
+			itemRows.Close()
+			o.Items = items
+		}
+
+		// If order has user_id, fetch basic user info
+		if o.UserID != nil {
+			var user map[string]interface{}
+			var name, email string
+			err := db.DB.QueryRow(`SELECT name, email FROM users WHERE id = ?`, *o.UserID).Scan(&name, &email)
+			if err == nil {
+				user = map[string]interface{}{"name": name, "email": email}
+				o.User = &user
+			}
+		}
+
 		orders = append(orders, o)
 	}
 

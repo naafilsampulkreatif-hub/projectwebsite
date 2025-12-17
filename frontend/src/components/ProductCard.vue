@@ -1,21 +1,14 @@
 <script setup lang="ts">
 import { useCartStore } from '../stores/cart';
-import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
 
 const props = defineProps<{
   product: any;
 }>();
 
 const cartStore = useCartStore();
-const authStore = useAuthStore();
-const router = useRouter();
 
 const addToCart = () => {
-  if (!authStore.isAuthenticated) {
-    router.push('/login');
-    return;
-  }
+  // Allow guests to add to cart; session_id is created automatically by api.ts
   cartStore.addToCart(props.product.id);
 };
 </script>

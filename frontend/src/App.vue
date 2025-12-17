@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import { onMounted } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import { onMounted, computed } from 'vue'
 import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
 import Toast from './components/Toast.vue'
+
+const route = useRoute();
+
+const showLayout = computed(() => {
+  // Hide Navbar and Footer on admin routes (path starts with /admin)
+  return !route.path.startsWith('/admin');
+});
 
 onMounted(() => {
   if (!localStorage.getItem('session_id')) {
@@ -15,11 +22,11 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex flex-col bg-dark-bg text-white font-sans">
-    <Navbar />
+    <Navbar v-if="showLayout" />
     <main class="flex-grow">
       <RouterView />
     </main>
-    <Footer />
+    <Footer v-if="showLayout" />
     <Toast />
   </div>
 </template>

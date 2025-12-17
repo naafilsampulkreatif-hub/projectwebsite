@@ -5,6 +5,10 @@ import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
 import InvoiceView from '../views/InvoiceView.vue'
 import AdminView from '../views/AdminView.vue'
+import AdminProducts from '../views/AdminProducts.vue'
+import AdminOrders from '../views/AdminOrders.vue'
+import AdminUsers from '../views/AdminUsers.vue'
+import AdminSettings from '../views/AdminSettings.vue'
 import OrdersView from '../views/OrdersView.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -45,7 +49,14 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: AdminView,
-      meta: { requiresAuth: true, requiresAdmin: true }
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        { path: '', redirect: { name: 'admin-produk' } },
+        { path: 'produk', name: 'admin-produk', component: AdminProducts },
+        { path: 'pesanan', name: 'admin-pesanan', component: AdminOrders },
+        { path: 'pengguna', name: 'admin-pengguna', component: AdminUsers },
+        { path: 'pengaturan', name: 'admin-pengaturan', component: AdminSettings }
+      ]
     }
   ]
 })

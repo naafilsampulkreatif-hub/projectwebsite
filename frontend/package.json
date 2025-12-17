@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "make-favicon": "node scripts/make-favicon.js"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -24,5 +25,7 @@
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
     "vue-tsc": "^3.1.4"
+    ,
+    "png-to-ico": "^1.0.0"
   }
 }
