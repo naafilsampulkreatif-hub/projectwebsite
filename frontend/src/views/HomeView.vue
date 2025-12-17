@@ -49,13 +49,20 @@ onMounted(async () => {
     }
   }
 
-   // load saved comments
-   try {
+  // Load comments from backend
+  try {
+    const res = await api.get('/comments')
+    comments.value = res.data || []
+  } catch (e) {
+    console.error('Failed to load comments', e)
+    // Fallback to localStorage if backend fails
+    try {
       const saved = localStorage.getItem('home_comments')
       if (saved) comments.value = JSON.parse(saved)
-   } catch (e) {
-      console.error('Failed to load comments', e)
-   }
+    } catch (ex) {
+      console.error('Failed to load comments from storage', ex)
+    }
+  }
 })
 
 const addToCart = async (product: any) => {
@@ -73,7 +80,7 @@ const addToCart = async (product: any) => {
 
 const getImageUrl = (url: string) => url || 'https://via.placeholder.com/300x200/00FF00/FFFFFF?text=Product'
 
-const submitComment = () => {
+const submitComment = async () => {
    if (!commenterName.value.trim() || !commenterEmail.value.trim() || !commentText.value.trim()) {
       toast.show('Mohon isi nama, email, dan komentar', 'error')
       return
@@ -83,24 +90,47 @@ const submitComment = () => {
       return
    }
 
-   const c = {
-      name: commenterName.value.trim(),
-      email: commenterEmail.value.trim(),
-      text: commentText.value.trim(),
-      created_at: new Date().toISOString(),
-   }
-
-   comments.value.unshift(c)
    try {
-      localStorage.setItem('home_comments', JSON.stringify(comments.value))
-   } catch (e) {
-      console.error('Failed to save comment', e)
-   }
+      // Submit to backend API
+      const res = await api.post('/comments', {
+         name: commenterName.value.trim(),
+         email: commenterEmail.value.trim(),
+         text: commentText.value.trim()
+      })
 
-   commenterName.value = ''
-   commenterEmail.value = ''
-   commentText.value = ''
-   toast.show('Komentar berhasil ditambahkan', 'success')
+         toast.show(res.data.message || 'Komentar dipublikasikan', 'success')
+
+         // If backend returned the created comment, add it immediately
+         if (res.data && res.data.comment) {
+            comments.value.unshift(res.data.comment)
+         } else {
+            // Reset form
+            commenterName.value = ''
+            commenterEmail.value = ''
+            commentText.value = ''
+
+            // Reload comments from backend
+            const getRes = await api.get('/comments')
+            comments.value = getRes.data || []
+         }
+
+         // Reset form (ensure cleared even if comment added)
+         commenterName.value = ''
+         commenterEmail.value = ''
+         commentText.value = ''
+   } catch (e) {
+      console.error('Failed to submit comment', e)
+         toast.show('Gagal mengirim komentar ke server, disimpan lokal', 'error')
+         // fallback: save locally so it's not lost
+         const c = {
+           name: commenterName.value.trim(),
+           email: commenterEmail.value.trim(),
+           text: commentText.value.trim(),
+           created_at: new Date().toISOString(),
+         }
+         comments.value.unshift(c)
+         try { localStorage.setItem('home_comments', JSON.stringify(comments.value)) } catch (ex) { console.error(ex) }
+   }
 }
 </script>
 

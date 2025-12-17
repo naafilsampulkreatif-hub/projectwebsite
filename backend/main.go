@@ -35,6 +35,7 @@ func main() {
 	r.HandleFunc("/api/login", handlers.Login).Methods("POST")             // Login
 	r.HandleFunc("/api/products", handlers.GetProducts).Methods("GET")     // List Products
 	r.HandleFunc("/api/products/{id}", handlers.GetProduct).Methods("GET") // Get Product
+	r.HandleFunc("/api/comments", handlers.GetComments).Methods("GET")     // Get approved comments
 
 	// Hybrid Routes (User or Guest)
 	hybridRouter := r.PathPrefix("/api").Subrouter()
@@ -45,6 +46,7 @@ func main() {
 	hybridRouter.HandleFunc("/checkout", handlers.Checkout).Methods("POST")                  // Checkout
 	hybridRouter.HandleFunc("/orders", handlers.GetOrders).Methods("GET")                    // My Orders (or Session Orders)
 	hybridRouter.HandleFunc("/orders/{id}/invoice", handlers.GetOrderInvoice).Methods("GET") // Get Invoice
+	hybridRouter.HandleFunc("/comments", handlers.CreateComment).Methods("POST")             // Create comment
 
 	// Protected Routes (Admin)
 	adminRouter := r.PathPrefix("/api/admin").Subrouter()
@@ -55,6 +57,20 @@ func main() {
 	adminRouter.HandleFunc("/products/{id}", handlers.DeleteProduct).Methods("DELETE") // Delete Product
 	adminRouter.HandleFunc("/upload", handlers.UploadFile).Methods("POST")             // Upload File
 	adminRouter.HandleFunc("/orders", handlers.AdminGetOrders).Methods("GET")          // Admin: list orders
+	// New admin endpoints
+	adminRouter.HandleFunc("/users", handlers.GetUsers).Methods("GET")                                 // Get all users
+	adminRouter.HandleFunc("/users/{id}/role", handlers.UpdateUserRole).Methods("PUT")                 // Update user role
+	adminRouter.HandleFunc("/users/{id}", handlers.DeleteUser).Methods("DELETE")                       // Delete user
+	adminRouter.HandleFunc("/customer-info", handlers.GetCustomerInfo).Methods("GET")                  // Get customer checkout data
+	adminRouter.HandleFunc("/profile", handlers.GetAdminProfile).Methods("GET")                        // Get admin profile
+	adminRouter.HandleFunc("/profile", handlers.UpdateAdminProfile).Methods("PUT")                     // Update admin profile
+	adminRouter.HandleFunc("/password", handlers.ChangeAdminPassword).Methods("POST")                  // Change admin password
+	adminRouter.HandleFunc("/activity-log", handlers.GetActivityLog).Methods("GET")                    // Get activity log
+	adminRouter.HandleFunc("/stats", handlers.GetUserStats).Methods("GET")                             // Get user stats
+	adminRouter.HandleFunc("/comments", handlers.GetComments).Methods("GET")                           // Get all comments (admin view)
+	adminRouter.HandleFunc("/comments/{id}/moderate", handlers.ModerateComment).Methods("POST")        // Moderate comment
+	adminRouter.HandleFunc("/comments/{id}", handlers.DeleteComment).Methods("DELETE")                 // Delete comment
+	adminRouter.HandleFunc("/comments/pending-count", handlers.GetPendingCommentsCount).Methods("GET") // Pending comments count
 
 	// CORS Handler
 	c := cors.New(cors.Options{

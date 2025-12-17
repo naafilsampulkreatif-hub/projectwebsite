@@ -10,6 +10,7 @@ import AdminOrders from '../views/AdminOrders.vue'
 import AdminUsers from '../views/AdminUsers.vue'
 import AdminSettings from '../views/AdminSettings.vue'
 import OrdersView from '../views/OrdersView.vue'
+import ShopView from '../views/ShopView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -44,6 +45,11 @@ const router = createRouter({
       path: '/orders',
       name: 'orders',
       component: OrdersView
+    },
+    {
+      path: '/shop',
+      name: 'shop',
+      component: ShopView
     },
     {
       path: '/admin',

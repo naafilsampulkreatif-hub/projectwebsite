@@ -9,13 +9,22 @@ const showForm = ref(false);
 const form = ref({
     id: 0,
     name: '',
-    slug: '',
     description: '',
     price: 0,
     stock: 0,
     image_url: '',
     category_id: 1
 });
+
+const generateSlug = (name: string) => {
+    return name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .slice(0, 100);
+};
 
 const fetchProducts = async () => {
     try {
@@ -32,7 +41,6 @@ const resetForm = () => {
     form.value = {
         id: 0,
         name: '',
-        slug: '',
         description: '',
         price: 0,
         stock: 0,
@@ -59,19 +67,29 @@ const saveProduct = async () => {
         const productData = {
              ...form.value,
              price: Number(form.value.price),
+             slug: generateSlug(form.value.name),
              stock: Number(form.value.stock),
              category_id: Number(form.value.category_id)
         };
-
+        let res;
         if (isEditing.value) {
-            await api.put(`/admin/products/${form.value.id}`, productData);
+            res = await api.put(`/admin/products/${form.value.id}`, productData);
         } else {
-            await api.post('/admin/products', productData);
+            res = await api.post('/admin/products', productData);
         }
-        await fetchProducts();
-        resetForm();
-    } catch (e) {
-        alert("Error saving product");
+
+        // If backend returned created product, update list
+        if (res && (res.status === 200 || res.status === 201)) {
+            await fetchProducts();
+            resetForm();
+        } else {
+            console.error('Unexpected response saving product', res);
+            alert('Error saving product: unexpected response')
+        }
+    } catch (e: any) {
+        console.error('Error saving product:', e);
+        const msg = (e as any)?.response?.data || (e as any)?.message || 'Unknown error';
+        alert(`Error saving product: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`);
     }
 };
 
@@ -118,7 +136,9 @@ const handleFileUpload = async (event: any) => {
         <h2 class="text-2xl font-bold mb-6 border-b pb-2">{{ isEditing ? 'Edit' : 'Tambah' }} Produk</h2>
         <form @submit.prevent="saveProduct" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <input v-model="form.name" placeholder="Nama Produk" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green" required>
-            <input v-model="form.slug" placeholder="Slug (URL)" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green" required>
+            <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl text-gray-500 flex items-center">
+                <span class="text-sm">Slug: <strong>{{ generateSlug(form.name) || 'product-name' }}</strong></span>
+            </div>
             <input v-model="form.price" type="number" step="100" placeholder="Harga (IDR)" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green" required>
             <input v-model="form.stock" type="number" placeholder="Stok" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-neon-green" required>
 

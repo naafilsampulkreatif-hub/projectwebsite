@@ -70,5 +70,47 @@ CREATE TABLE IF NOT EXISTS cart_items (
 -- We will handle the "one or the other" logic in the application layer or use a trigger/generated column if strictness is needed.
 -- Ideally we migrate guest cart to user cart on login.
 
+-- Create Customer Info Table (Data diri dari user yang telah checkout)
+CREATE TABLE IF NOT EXISTS customer_info (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    session_id VARCHAR(255),
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    address TEXT,
+    city VARCHAR(100),
+    postal_code VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create Admin Activity Log Table
+CREATE TABLE IF NOT EXISTS admin_activity_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    entity_type VARCHAR(100),
+    entity_id INT,
+    details JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create Comments Table
+CREATE TABLE IF NOT EXISTS comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    text TEXT NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    admin_notes TEXT,
+    moderated_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    moderated_at TIMESTAMP NULL,
+    FOREIGN KEY (moderated_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
 -- Insert Default Admin (Password: admin123)
 -- INSERT INTO users (name, email, password, role) VALUES ('Admin', 'admin@example.com', '$2a$10$YourHashedPasswordHere', 'admin');

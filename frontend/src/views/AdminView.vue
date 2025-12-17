@@ -40,7 +40,7 @@ const router = useRouter();
 					</ul>
 				</nav>
 				<div class="mt-auto">
-					 <button @click="authStore.logout(); router.push('/login')" class="w-full text-center bg-transparent px-4 py-2 rounded-lg text-red-500 hover:bg-red-500/10 hover:text-red-400 font-bold uppercase text-sm tracking-widest transition-all">Logout</button>
+					 <button @click="authStore.logout(); router.push('/')" class="w-full text-center bg-transparent px-4 py-2 rounded-lg text-red-500 hover:bg-red-500/10 hover:text-red-400 font-bold uppercase text-sm tracking-widest transition-all">Logout</button>
 				</div>
 		 </aside>
 

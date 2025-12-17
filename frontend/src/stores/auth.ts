@@ -9,7 +9,7 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isAuthenticated: (state) => !!state.token, // Check if logged in
-    isAdmin: (state) => state.user?.role === 'admin', // Check if admin
+    isAdmin: (state) => (state.user?.role || '').toString().toLowerCase() === 'admin', // Case-insensitive admin check
   },
   actions: {
     // Login action
@@ -25,7 +25,8 @@ export const useAuthStore = defineStore('auth', {
 
         return true;
       } catch (error) {
-        console.error("Login failed", error);
+        // Log backend error message for debugging
+        console.error("Login failed", (error as any)?.response?.data || error);
         return false;
       }
     },

@@ -1,10 +1,10 @@
 package middleware // Package middleware
 
 import (
-	"context" // Context package
-	"net/http" // HTTP package
-	"strings" // String manipulation
+	"context"                 // Context package
 	"ecommerce-backend/utils" // Utils for JWT
+	"net/http"                // HTTP package
+	"strings"                 // String manipulation
 )
 
 // AuthMiddleware checks for a valid JWT token (Strict)
@@ -32,9 +32,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Add user info to context
+		// Add user info to context (normalize role to lowercase)
 		ctx := context.WithValue(r.Context(), "user_id", claims.UserID)
-		ctx = context.WithValue(ctx, "role", claims.Role)
+		ctx = context.WithValue(ctx, "role", strings.ToLower(claims.Role))
 
 		// Call the next handler with the new context
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -54,8 +54,9 @@ func OptionalAuthMiddleware(next http.Handler) http.Handler {
 				claims, err := utils.ValidateToken(tokenString)
 				if err == nil {
 					// Valid token, add to context
+					// Normalize role to lowercase for consistent checks
 					ctx := context.WithValue(r.Context(), "user_id", claims.UserID)
-					ctx = context.WithValue(ctx, "role", claims.Role)
+					ctx = context.WithValue(ctx, "role", strings.ToLower(claims.Role))
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
 				}

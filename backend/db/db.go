@@ -62,4 +62,12 @@ func InitDB() {
 
 	// Print success message
 	fmt.Println("Database connected successfully!")
+
+	// Ensure a default 'Uncategorized' category exists to avoid FK issues
+	_, err = DB.Exec("INSERT INTO categories (name, slug) SELECT ?, ? FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM categories WHERE slug = ?)", "Uncategorized", "uncategorized", "uncategorized")
+	if err != nil {
+		log.Println("Warning: could not ensure default category 'uncategorized':", err)
+	} else {
+		log.Println("Ensured default category 'uncategorized' exists or was already present")
+	}
 }

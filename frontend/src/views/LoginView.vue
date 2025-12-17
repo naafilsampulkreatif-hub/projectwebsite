@@ -11,15 +11,26 @@ const router = useRouter();
 
 const handleLogin = async () => {
   error.value = '';
-  const success = await authStore.login({ email: email.value, password: password.value });
-  if (success) {
-    if (authStore.isAdmin) {
-      router.push('/admin');
-    } else {
-      router.push('/');
+  try {
+    const success = await authStore.login({ email: email.value, password: password.value });
+    if (success) {
+      // Reset form on success
+      email.value = '';
+      password.value = '';
+      if (authStore.isAdmin) {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
+      return
     }
-  } else {
     error.value = 'Email atau Password salah.';
+  } catch (err) {
+    console.error('Login error', err);
+    error.value = 'Terjadi kesalahan saat login.';
+  } finally {
+    // Clear password in all cases so it's not left in the field
+    password.value = '';
   }
 };
 </script>
