@@ -49,48 +49,6 @@ Berikut adalah logika alur fitur utama dalam representasi teks dan kode logika.
     - Jika data salah -> Tampilkan pesan error -> Kembali ke halaman login.
 4. **Selesai.**
 
-**Logika Kode (Pseudo-code):**
-```pseudo
-IF input_email AND input_password MATCH database_record:
-    CREATE session_token
-    IF role == "admin":
-        REDIRECT to /admin-dashboard
-    ELSE:
-        REDIRECT to /home
-ELSE:
-    DISPLAY "Kredensial Salah"
-    RELOAD login_page
-B. Alur Checkout Pesanan
-Mulai: User klik "Checkout" di halaman keranjang.
-
-Cek Login: - Jika sudah Login: Ambil data pribadi dari database.
-
-Jika belum Login: Tampilkan formulir data diri (Email, Nama, Alamat).
-
-Validasi Stok: Backend mengecek ketersediaan buku di MySQL.
-
-Pembayaran: User memilih metode pembayaran dan konfirmasi.
-
-Update: Sistem mengurangi stok di database dan mencatat transaksi.
-
-Selesai.
-
-Logika Kode (Pseudo-code):
-
-Cuplikan kode
-
-FUNCTION process_checkout(user_data, cart_items):
-    FOR item IN cart_items:
-        IF item.qty > database.stock:
-            RETURN "Stok Tidak Cukup"
-    
-    database.create_order(user_data, cart_items)
-    database.update_stock(minus, cart_items)
-    SEND confirmation_email
-    RETURN "Checkout Berhasil"
-III. Full Stack & Spesifikasi Teknik
-Spesifikasi ini wajib dipenuhi oleh tim developer untuk menjaga konsistensi performa aplikasi.
-
 1. Teknologi Pengembangan (Stack)
 Frontend: Vue.js dengan build tool Vite v7.3.0.
 
