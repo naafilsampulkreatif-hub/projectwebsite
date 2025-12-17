@@ -13,35 +13,35 @@
         </div>
       </div>
       <div>
-        <h3 class="font-bold text-xl mb-6">Company info</h3>
+        <h3 class="font-bold text-xl mb-6"> </h3>
         <ul class="text-sm opacity-80 space-y-3">
-          <li><a href="#" class="hover:text-neon-green">About Us</a></li>
-          <li><a href="#" class="hover:text-neon-green">Carrier</a></li>
-          <li><a href="#" class="hover:text-neon-green">We are hiring</a></li>
-          <li><a href="#" class="hover:text-neon-green">Blog</a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
         </ul>
       </div>
       <div>
-        <h3 class="font-bold text-xl mb-6">Features</h3>
+        <h3 class="font-bold text-xl mb-6"> </h3>
         <ul class="text-sm opacity-80 space-y-3">
-           <li><a href="#" class="hover:text-neon-green">Business Marketing</a></li>
-           <li><a href="#" class="hover:text-neon-green">User Analytic</a></li>
-           <li><a href="#" class="hover:text-neon-green">Live Chat</a></li>
-           <li><a href="#" class="hover:text-neon-green">Unlimited Support</a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
+           <li><a href="#" class="hover:text-neon-green"> </a></li>
         </ul>
       </div>
       <div>
-        <h3 class="font-bold text-xl mb-6">Resources</h3>
+        <h3 class="font-bold text-xl mb-6">info perusahaan</h3>
         <ul class="text-sm opacity-80 space-y-3">
-           <li><a href="#" class="hover:text-neon-green">IOS & Android</a></li>
-           <li><a href="#" class="hover:text-neon-green">Watch a Demo</a></li>
-           <li><a href="#" class="hover:text-neon-green">Customers</a></li>
-           <li><a href="#" class="hover:text-neon-green">API</a></li>
+          <li><a href="#" class="hover:text-neon-green">Gedung BITC, Jl. HMS Mintareja Sarjana Hukum Lantai 3, Baros, Kec. Cimahi Tengah, Kota Cimahi, Jawa Barat 40521</a></li>
+          <li><a href="#" class="hover:text-neon-green">0898-6825-936</a></li>
+          <li><a href="#" class="hover:text-neon-green">09.00–17.00</a></li>
+          <li><a href="https://sampulkreativ.id/" class="hover:text-neon-green">Kunjungi</a></li>
         </ul>
       </div>
     </div>
     <div class="text-center mt-12 text-sm opacity-60 bg-dark-blue/50 py-4">
-      Made With Love By Finland All Right Reserved
+      © 2025 PT. SampulKreativ Technology. Hak Cipta Dilindungi.
       <span class="mx-2">|</span>
       <router-link to="/login" class="hover:text-neon-green">Admin Login</router-link>
     </div>

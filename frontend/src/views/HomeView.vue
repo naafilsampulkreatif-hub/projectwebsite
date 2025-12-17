@@ -112,7 +112,7 @@ const submitComment = () => {
              <img :src="heroImage" alt="Hero" class="absolute inset-0 w-full h-full object-cover" />
              <div class="absolute inset-0 bg-neon-green opacity-40"></div>
              <div class="relative z-10 flex items-center justify-center h-full">
-                <h1 class="text-6xl md:text-8xl font-black text-white tracking-tighter opacity-90 select-none">NIGHT STALKERS</h1>
+                <h1 class="text-6xl md:text-8xl font-black text-white tracking-tighter opacity-90 select-none">HITAM</h1>
              </div>
           </div>
     </div>
@@ -183,14 +183,14 @@ const submitComment = () => {
    <!-- Shop Section -->
    <section class="max-w-5xl mx-auto px-6 lg:px-8 mb-12 bg-[#fbfbfb] rounded-[1rem] py-6">
        <div class="text-center mb-16">
-          <h2 class="text-4xl font-extrabold mb-4">TOKO <span class="text-neon-green">Koleksi Kami</span></h2>
-          <p class="text-gray-500 mt-2 text-lg">Find your favorite items</p>
+          <h2 class="text-4xl font-extrabold mb-4">Koleksi <span class="text-neon-green">Kami</span></h2>
+          <p class="text-gray-500 mt-2 text-lg">Temukan yang menarik bagimu</p>
        </div>
 
           <div class="relative">
              <div class="flex justify-end mb-4 gap-2">
-                <button @click="scrollProducts('left')" class="bg-white border rounded-full p-2 shadow hover:bg-gray-50">◀</button>
-                <button @click="scrollProducts('right')" class="bg-white border rounded-full p-2 shadow hover:bg-gray-50">▶</button>
+                <button @click="scrollProducts('left')" class="bg-white border rounded-full p-2 shadow hover:bg-gray-50"><</button>
+                <button @click="scrollProducts('right')" class="bg-white border rounded-full p-2 shadow hover:bg-gray-50">></button>
              </div>
 
              <div ref="productsContainer" class="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4">
