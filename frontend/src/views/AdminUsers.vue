@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import { useToastStore } from '../stores/toast'
+import ComingSoon from '../components/ComingSoon.vue'
 
 const toast = useToastStore()
 
@@ -39,9 +40,11 @@ const loadUsers = async () => {
 const loadCustomers = async () => {
   try {
     const res = await api.get('/admin/customer-info')
-    customers.value = res.data || []
-  } catch (e) {
-    console.error('Failed to load customers', e)
+    console.log('Customer info response:', res.data);
+    customers.value = Array.isArray(res.data) ? res.data : []
+  } catch (e: any) {
+    console.error('Failed to load customers', e.response?.data || e.message)
+    customers.value = []
   }
 }
 
@@ -188,7 +191,7 @@ const selectCommentForModeration = (comment: any) => {
               <td class="px-4 py-3">
                 <button
                   @click="deleteUser(user.id)"
-                  class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                  class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-400 transition-colors"
                 >
                   Hapus
                 </button>
@@ -203,31 +206,7 @@ const selectCommentForModeration = (comment: any) => {
     <!-- Customers Tab -->
     <div v-if="activeTab === 'customers'" class="space-y-4">
       <h2 class="text-2xl font-bold">Data Pelanggan yang Checkout</h2>
-      <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="w-full">
-          <thead class="bg-gray-100 border-b">
-            <tr>
-              <th class="px-4 py-3 text-left font-bold">Nama Lengkap</th>
-              <th class="px-4 py-3 text-left font-bold">Email</th>
-              <th class="px-4 py-3 text-left font-bold">No. Telepon</th>
-              <th class="px-4 py-3 text-left font-bold">Alamat</th>
-              <th class="px-4 py-3 text-left font-bold">Kota</th>
-              <th class="px-4 py-3 text-left font-bold">Tanggal</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="customer in customers" :key="customer.id" class="border-b hover:bg-gray-50">
-              <td class="px-4 py-3 font-semibold">{{ customer.full_name }}</td>
-              <td class="px-4 py-3">{{ customer.email }}</td>
-              <td class="px-4 py-3">{{ customer.phone || '-' }}</td>
-              <td class="px-4 py-3 text-sm">{{ customer.address || '-' }}</td>
-              <td class="px-4 py-3">{{ customer.city || '-' }}</td>
-              <td class="px-4 py-3 text-sm text-gray-500">{{ new Date(customer.created_at).toLocaleDateString() }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div v-if="customers.length === 0" class="p-4 text-center text-gray-500">Tidak ada data pelanggan</div>
-      </div>
+      <ComingSoon />
     </div>
 
     <!-- Comments Tab -->
@@ -302,13 +281,13 @@ const selectCommentForModeration = (comment: any) => {
           <div class="flex gap-2">
             <button
               @click="moderateComment(selectedComment.id, moderationStatus, moderationNotes)"
-              class="flex-1 bg-neon-green text-black font-bold py-2 rounded hover:bg-[#00cc00]"
+              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400 transition-colors"
             >
               Simpan
             </button>
             <button
               @click="deleteComment(selectedComment.id)"
-              class="flex-1 bg-red-500 text-white font-bold py-2 rounded hover:bg-red-600"
+              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400 transition-colors"
             >
               Hapus
             </button>

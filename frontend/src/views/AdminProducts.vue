@@ -126,7 +126,7 @@ const handleFileUpload = async (event: any) => {
   <div>
     <div class="flex justify-between items-center mb-10">
         <h1 class="text-3xl font-bold">Dashboard Produk</h1>
-        <button @click="openAdd" class="bg-neon-green text-white px-6 py-3 rounded-full font-bold uppercase shadow-lg hover:shadow-neon-green/50 transition-all hover:-translate-y-1">
+        <button @click="openAdd" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold uppercase shadow-lg hover:bg-red-400 transition-all hover:-translate-y-1">
             + Tambah Produk
         </button>
     </div>
@@ -156,7 +156,7 @@ const handleFileUpload = async (event: any) => {
 
             <div class="md:col-span-2 flex space-x-4 justify-end">
                 <button type="button" @click="resetForm" class="px-6 py-3 rounded-full font-bold text-gray-500 hover:bg-gray-100">Batal</button>
-                <button type="submit" class="bg-neon-green text-black px-8 py-3 rounded-full font-bold shadow-lg hover:bg-[#00cc00]">Simpan</button>
+                <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-red-400">Simpan</button>
             </div>
         </form>
     </div>
@@ -180,8 +180,8 @@ const handleFileUpload = async (event: any) => {
                     <td class="p-6 text-neon-green font-bold">RP {{ p.price.toLocaleString() }}</td>
                     <td class="p-6 text-gray-600">{{ p.stock }}</td>
                     <td class="p-6 space-x-4">
-                        <button @click="openEdit(p)" class="text-blue-500 font-bold hover:underline">Edit</button>
-                        <button @click="deleteProduct(p.id)" class="text-red-500 font-bold hover:underline">Hapus</button>
+                        <button @click="openEdit(p)" class="bg-red-600 text-white font-bold px-4 py-2 rounded-full shadow hover:bg-red-400 transition-colors">Edit</button>
+                        <button @click="deleteProduct(p.id)" class="bg-red-600 text-white font-bold px-4 py-2 rounded-full shadow hover:bg-red-400 transition-colors">Hapus</button>
                     </td>
                 </tr>
             </tbody>

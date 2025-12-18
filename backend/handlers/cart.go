@@ -2,11 +2,22 @@ package handlers // Package handlers
 
 import (
 	"database/sql"
-	"encoding/json" // JSON encoding
-	"net/http" // HTTP
-	"ecommerce-backend/db" // DB
+	"ecommerce-backend/db"     // DB + guest cart
 	"ecommerce-backend/models" // Models
+	"encoding/json"            // JSON encoding
+	"log"
+	"net/http" // HTTP
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
+
+// writeJSONError sends a JSON error response with given status
+func writeJSONError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
 
 // getIdentity returns (userID *int, sessionID string)
 func getIdentity(r *http.Request) (*int, string) {
@@ -25,15 +36,34 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	userID, sessionID := getIdentity(r)
 
 	if userID == nil && sessionID == "" {
-		http.Error(w, "User ID or Session ID required", http.StatusBadRequest)
+		writeJSONError(w, http.StatusBadRequest, "User ID or Session ID required")
 		return
 	}
 
-	var item models.CartItem // Cart item struct
-	// Decode JSON
-	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	// Accept a minimal payload to avoid decoding issues from nested objects
+	var payload struct {
+		ProductID int `json:"product_id"`
+		Quantity  int `json:"quantity"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "Invalid input")
 		return
+	}
+
+	if payload.ProductID <= 0 {
+		writeJSONError(w, http.StatusBadRequest, "Invalid product_id")
+		return
+	}
+	if payload.Quantity <= 0 {
+		payload.Quantity = 1
+	}
+
+	// Log incoming request for debugging
+	if userID != nil {
+		log.Printf("AddToCart request: user_id=%d product_id=%d qty=%d", *userID, payload.ProductID, payload.Quantity)
+	} else {
+		log.Printf("AddToCart request: session_id=%s product_id=%d qty=%d", sessionID, payload.ProductID, payload.Quantity)
 	}
 
 	// Logic: Upsert based on (user_id, product_id) OR (session_id, product_id)
@@ -46,33 +76,147 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	if userID != nil {
 		// Logged in user
 		query = `INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)
-		         ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`
-		_, err = db.DB.Exec(query, *userID, item.ProductID, item.Quantity)
+				 ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)`
+		_, err = db.DB.Exec(query, *userID, payload.ProductID, payload.Quantity)
 	} else {
-		// Guest - Fix for MySQL NULL unique constraint behavior
-		// Check if item exists first
-		var existingQty int
-		checkQuery := `SELECT quantity FROM cart_items WHERE session_id = ? AND product_id = ? AND user_id IS NULL`
-		err = db.DB.QueryRow(checkQuery, sessionID, item.ProductID).Scan(&existingQty)
-
-		if err == sql.ErrNoRows {
-			// Insert
-			insertQuery := `INSERT INTO cart_items (session_id, product_id, quantity) VALUES (?, ?, ?)`
-			_, err = db.DB.Exec(insertQuery, sessionID, item.ProductID, item.Quantity)
-		} else if err == nil {
-			// Update
-			updateQuery := `UPDATE cart_items SET quantity = quantity + ? WHERE session_id = ? AND product_id = ? AND user_id IS NULL`
-			_, err = db.DB.Exec(updateQuery, item.Quantity, sessionID, item.ProductID)
-		}
+		// Guest: use file-backed guest cart store (no DB schema changes required)
+		err = db.AddGuestItem(sessionID, payload.ProductID, payload.Quantity)
 	}
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("AddToCart DB error: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	w.WriteHeader(http.StatusOK) // 200 OK
 	json.NewEncoder(w).Encode(map[string]string{"message": "Added to cart"})
+}
+
+// UpdateCart sets the quantity for a product in the cart (or deletes if quantity <= 0)
+func UpdateCart(w http.ResponseWriter, r *http.Request) {
+	userID, sessionID := getIdentity(r)
+
+	if userID == nil && sessionID == "" {
+		writeJSONError(w, http.StatusBadRequest, "User ID or Session ID required")
+		return
+	}
+
+	var payload struct {
+		ProductID int `json:"product_id"`
+		Quantity  int `json:"quantity"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "Invalid input")
+		return
+	}
+
+	if userID != nil {
+		log.Printf("UpdateCart request: user_id=%d product_id=%d qty=%d", *userID, payload.ProductID, payload.Quantity)
+	} else {
+		log.Printf("UpdateCart request: session_id=%s product_id=%d qty=%d", sessionID, payload.ProductID, payload.Quantity)
+	}
+
+	if payload.Quantity <= 0 {
+		// Delete the cart item
+		if userID != nil {
+			res, err := db.DB.Exec("DELETE FROM cart_items WHERE user_id = ? AND product_id = ?", *userID, payload.ProductID)
+			if err != nil {
+				log.Printf("UpdateCart DB error: %v", err)
+				writeJSONError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			rows, _ := res.RowsAffected()
+			json.NewEncoder(w).Encode(map[string]interface{}{"deleted": rows})
+			return
+		}
+		// guest
+		if err := db.RemoveGuestItem(sessionID, payload.ProductID); err != nil {
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"deleted": 1})
+		return
+	}
+
+	// Otherwise set quantity
+	var err error
+	if userID != nil {
+		_, err = db.DB.Exec("UPDATE cart_items SET quantity = ? WHERE user_id = ? AND product_id = ?", payload.Quantity, *userID, payload.ProductID)
+	} else {
+		// guest
+		err = db.UpdateGuestItem(sessionID, payload.ProductID, payload.Quantity)
+	}
+
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Cart updated"})
+}
+
+// RemoveCartItem deletes a cart item by its cart_items.id (authorized by owner)
+func RemoveCartItem(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	userID, sessionID := getIdentity(r)
+	if userID == nil && sessionID == "" {
+		writeJSONError(w, http.StatusBadRequest, "User ID or Session ID required")
+		return
+	}
+
+	// Try DB-backed deletion first
+	var uid sql.NullInt64
+	var sid sql.NullString
+	err := db.DB.QueryRow("SELECT user_id, session_id FROM cart_items WHERE id = ?", id).Scan(&uid, &sid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Possibly a guest using file-backed cart: treat `id` as product_id and remove
+			if sessionID != "" {
+				if pid, perr := strconv.Atoi(id); perr == nil {
+					if err := db.RemoveGuestItem(sessionID, pid); err != nil {
+						writeJSONError(w, http.StatusInternalServerError, err.Error())
+						return
+					}
+					json.NewEncoder(w).Encode(map[string]string{"message": "Item removed"})
+					return
+				}
+			}
+			writeJSONError(w, http.StatusNotFound, "Not found")
+			return
+		}
+		log.Printf("RemoveCartItem lookup error: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Check ownership for DB-backed row
+	if uid.Valid {
+		if userID == nil || int(uid.Int64) != *userID {
+			writeJSONError(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+	} else if sid.Valid {
+		if sessionID == "" || sid.String != sessionID {
+			writeJSONError(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+	} else {
+		writeJSONError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Delete DB-backed item
+	_, err = db.DB.Exec("DELETE FROM cart_items WHERE id = ?", id)
+	if err != nil {
+		log.Printf("RemoveCartItem delete error: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Item removed"})
 }
 
 // GetCart retrieves the user's or guest's cart
@@ -97,16 +241,36 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 		          WHERE c.user_id = ?`
 		rows, err = db.DB.Query(query, *userID)
 	} else {
-		query := `SELECT c.id, c.user_id, c.session_id, c.product_id, c.quantity,
-		                 p.id, p.name, p.price, p.image_url
-		          FROM cart_items c
-		          JOIN products p ON c.product_id = p.id
-		          WHERE c.session_id = ? AND c.user_id IS NULL`
-		rows, err = db.DB.Query(query, sessionID)
+		// Guest: load from file-backed guest cart
+		itemsMap, err2 := db.ListGuestItems(sessionID)
+		if err2 != nil {
+			writeJSONError(w, http.StatusInternalServerError, err2.Error())
+			return
+		}
+		items := []models.CartItem{}
+		for pid, qty := range itemsMap {
+			var p models.Product
+			err := db.DB.QueryRow("SELECT id, name, price, image_url FROM products WHERE id = ?", pid).Scan(&p.ID, &p.Name, &p.Price, &p.ImageURL)
+			if err != nil {
+				continue
+			}
+			item := models.CartItem{
+				ID:        pid,
+				UserID:    nil,
+				SessionID: sessionID,
+				ProductID: pid,
+				Quantity:  qty,
+				Product:   p,
+			}
+			items = append(items, item)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(items)
+		return
 	}
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	defer rows.Close()
@@ -115,7 +279,7 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var item models.CartItem
 		var p models.Product
-		var uid sql.NullInt64 // temporary scanner
+		var uid sql.NullInt64  // temporary scanner
 		var sid sql.NullString // temporary scanner
 
 		// Scan
@@ -145,7 +309,7 @@ func ValidateStock(w http.ResponseWriter, r *http.Request) {
 	userID, sessionID := getIdentity(r)
 
 	if userID == nil && sessionID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeJSONError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -161,16 +325,52 @@ func ValidateStock(w http.ResponseWriter, r *http.Request) {
 	if userID != nil {
 		query += `c.user_id = ?`
 		rows, err = db.DB.Query(query, *userID)
-	} else {
-		query += `c.session_id = ? AND c.user_id IS NULL`
-		rows, err = db.DB.Query(query, sessionID)
-	}
+		if err != nil {
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		defer rows.Close()
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		type StockIssue struct {
+			ProductName string `json:"product_name"`
+			Requested   int    `json:"requested"`
+			Available   int    `json:"available"`
+		}
+
+		issues := []StockIssue{}
+		valid := true
+
+		for rows.Next() {
+			var pid, reqQty, stock int
+			var name string
+			if err := rows.Scan(&pid, &reqQty, &name, &stock); err != nil {
+				continue
+			}
+
+			if reqQty > stock {
+				valid = false
+				issues = append(issues, StockIssue{
+					ProductName: name,
+					Requested:   reqQty,
+					Available:   stock,
+				})
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"valid":  valid,
+			"issues": issues,
+		})
 		return
 	}
-	defer rows.Close()
+
+	// Guest: validate against products for file-backed cart
+	itemsMap, err := db.ListGuestItems(sessionID)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	type StockIssue struct {
 		ProductName string `json:"product_name"`
@@ -181,26 +381,18 @@ func ValidateStock(w http.ResponseWriter, r *http.Request) {
 	issues := []StockIssue{}
 	valid := true
 
-	for rows.Next() {
-		var pid, reqQty, stock int
+	for pid, reqQty := range itemsMap {
 		var name string
-		if err := rows.Scan(&pid, &reqQty, &name, &stock); err != nil {
+		var stock int
+		if err := db.DB.QueryRow("SELECT name, stock FROM products WHERE id = ?", pid).Scan(&name, &stock); err != nil {
 			continue
 		}
-
 		if reqQty > stock {
 			valid = false
-			issues = append(issues, StockIssue{
-				ProductName: name,
-				Requested:   reqQty,
-				Available:   stock,
-			})
+			issues = append(issues, StockIssue{ProductName: name, Requested: reqQty, Available: stock})
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"valid":  valid,
-		"issues": issues,
-	})
+	json.NewEncoder(w).Encode(map[string]interface{}{"valid": valid, "issues": issues})
 }

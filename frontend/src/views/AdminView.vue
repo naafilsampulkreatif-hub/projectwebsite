@@ -14,25 +14,25 @@ const router = useRouter();
 				<nav aria-label="Admin menu" class="w-full">
 					<ul class="flex flex-col gap-2 font-bold tracking-wide mt-6">
 						<li>
-							<router-link to="/admin/produk" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-neon-green/10 hover:text-white transition-all transform hover:translate-x-2" active-class="bg-neon-green/20 text-white">
+							<router-link to="/admin/produk" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-400/20 hover:text-red-700 transition-all transform hover:translate-x-2" active-class="bg-red-600/20 text-red-700">
 								<span class="w-2 h-2 bg-neon-green rounded-full"></span>
 								<span class="ml-1">Produk</span>
 							</router-link>
 						</li>
 						<li>
-							<router-link to="/admin/pesanan" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-neon-green/10 hover:text-white transition-all transform hover:translate-x-2" active-class="bg-neon-green/20 text-white">
+							<router-link to="/admin/pesanan" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-400/20 hover:text-red-700 transition-all transform hover:translate-x-2" active-class="bg-red-600/20 text-red-700">
 								<span class="w-2 h-2 bg-transparent rounded-full"></span>
 								<span class="ml-1">Pesanan</span>
 							</router-link>
 						</li>
 						<li>
-							<router-link to="/admin/pengguna" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-neon-green/10 hover:text-white transition-all transform hover:translate-x-2" active-class="bg-neon-green/20 text-white">
+							<router-link to="/admin/pengguna" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-400/20 hover:text-red-700 transition-all transform hover:translate-x-2" active-class="bg-red-600/20 text-red-700">
 								<span class="w-2 h-2 bg-transparent rounded-full"></span>
 								<span class="ml-1">Pengguna</span>
 							</router-link>
 						</li>
 						<li>
-							<router-link to="/admin/pengaturan" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-neon-green/10 hover:text-white transition-all transform hover:translate-x-2" active-class="bg-neon-green/20 text-white">
+							<router-link to="/admin/pengaturan" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-400/20 hover:text-red-700 transition-all transform hover:translate-x-2" active-class="bg-red-600/20 text-red-700">
 								<span class="w-2 h-2 bg-transparent rounded-full"></span>
 								<span class="ml-1">Pengaturan</span>
 							</router-link>
@@ -40,7 +40,7 @@ const router = useRouter();
 					</ul>
 				</nav>
 				<div class="mt-auto">
-					 <button @click="authStore.logout(); router.push('/')" class="w-full text-center bg-transparent px-4 py-2 rounded-lg text-red-500 hover:bg-red-500/10 hover:text-red-400 font-bold uppercase text-sm tracking-widest transition-all">Logout</button>
+					<button @click="authStore.logout(); router.push('/')" class="w-full text-center bg-red-600 text-white px-4 py-2 rounded-lg font-bold uppercase text-sm tracking-widest hover:bg-red-400 transition-all">Logout</button>
 				</div>
 		 </aside>
 

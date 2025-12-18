@@ -11,6 +11,7 @@ import AdminUsers from '../views/AdminUsers.vue'
 import AdminSettings from '../views/AdminSettings.vue'
 import OrdersView from '../views/OrdersView.vue'
 import ShopView from '../views/ShopView.vue'
+import UnderConstruction from '../views/UnderConstruction.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -63,6 +64,11 @@ const router = createRouter({
         { path: 'pengguna', name: 'admin-pengguna', component: AdminUsers },
         { path: 'pengaturan', name: 'admin-pengaturan', component: AdminSettings }
       ]
+    },
+    {
+      path: '/under-construction',
+      name: 'under-construction',
+      component: UnderConstruction
     }
   ]
 })

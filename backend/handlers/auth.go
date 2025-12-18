@@ -1,12 +1,15 @@
 package handlers // Package handlers
 
 import (
-	"database/sql" // Database interface
-	"encoding/json" // JSON encoding/decoding
-	"net/http" // HTTP server
-	"ecommerce-backend/db" // Import our DB package
+	"database/sql"             // Database interface
+	"ecommerce-backend/db"     // Import our DB package
 	"ecommerce-backend/models" // Import our models
-	"ecommerce-backend/utils" // Import utils
+	"ecommerce-backend/utils"  // Import utils
+	"encoding/json"            // JSON encoding/decoding
+	"log"
+	"net/http" // HTTP server
+	"strings"
+
 	"golang.org/x/crypto/bcrypt" // Bcrypt for password hashing
 )
 
@@ -34,11 +37,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		// Check for duplicate entry (assuming email is unique)
-		http.Error(w, "Error registering user: " + err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error registering user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated) // Set status to 201 Created
+	w.WriteHeader(http.StatusCreated)                                                       // Set status to 201 Created
 	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"}) // Return success JSON
 }
 
@@ -51,6 +54,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+
+	// Trim and normalise inputs to avoid accidental whitespace mismatches
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.Password = strings.TrimSpace(req.Password)
 
 	// Query the user by email
 	var user models.User
@@ -68,6 +75,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// Compare the stored hashed password with the provided password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil { // If passwords don't match
+		// Log for debugging: do not include raw password
+		log.Printf("Login failed for email=%s: bcrypt compare error=%v, stored_hash_len=%d", req.Email, err, len(user.Password))
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
@@ -89,5 +98,5 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	response.User.Password = ""
 
 	w.Header().Set("Content-Type", "application/json") // Set content type
-	json.NewEncoder(w).Encode(response) // Encode response
+	json.NewEncoder(w).Encode(response)                // Encode response
 }

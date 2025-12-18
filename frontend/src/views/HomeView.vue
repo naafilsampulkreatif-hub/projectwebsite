@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import { useToastStore } from '../stores/toast'
+import ProductCard from '../components/ProductCard.vue'
 
 const products = ref<any[]>([])
 const productsContainer = ref<HTMLElement | null>(null)
@@ -27,9 +28,9 @@ const heroImage = ref('/banner.png')
 const synopsisImage = ref('/sipnosis.png')
 const aboutImage = ref('/tentang.png')
 const testimonialImages = ref<string[]>([
-   'https://images.unsplash.com/photo-1545996124-1b9a0f0d3bde?auto=format&fit=crop&w=256&q=60',
-   'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=60',
-   'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?auto=format&fit=crop&w=256&q=60'
+   'Grace.jpg',
+   'rouf.jpg',
+   'zildan.jpg'
 ])
 
 onMounted(async () => {
@@ -172,7 +173,7 @@ const submitComment = async () => {
              <p class="text-gray-600 mb-8 leading-loose">
                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
              </p>
-                  <button class="text-neon-green font-bold uppercase tracking-widest flex items-center hover:underline">
+                  <button class="bg-red-600 text-white font-bold uppercase tracking-widest flex items-center rounded-full px-6 py-2 transition-colors hover:bg-red-400">
                Selengkapnya
                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
@@ -196,7 +197,7 @@ const submitComment = async () => {
                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
              </p>
             <div class="flex justify-end">
-                <button class="text-neon-green font-bold uppercase tracking-widest flex items-center hover:underline">
+                <button class="bg-red-600 text-white font-bold uppercase tracking-widest flex items-center rounded-full px-6 py-2 transition-colors hover:bg-red-400">
                    Selengkapnya
                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
@@ -219,22 +220,13 @@ const submitComment = async () => {
 
           <div class="relative">
              <div class="flex justify-end mb-4 gap-2">
-                <button @click="scrollProducts('left')" class="bg-white border rounded-full p-2 shadow hover:bg-gray-50"><</button>
-                <button @click="scrollProducts('right')" class="bg-white border rounded-full p-2 shadow hover:bg-gray-50">></button>
+                <button @click="scrollProducts('left')" class="bg-red-600 text-white rounded-full p-2 shadow hover:bg-red-400 transition-colors"><</button>
+                <button @click="scrollProducts('right')" class="bg-red-600 text-white rounded-full p-2 shadow hover:bg-red-400 transition-colors">></button>
              </div>
 
              <div ref="productsContainer" class="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4">
-                <div v-for="product in products" :key="product.id" class="min-w-[240px] md:min-w-[260px] lg:min-w-[300px] snap-start bg-white rounded-[1.25rem] shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
-                   <div class="h-56 bg-gray-100 relative overflow-hidden">
-                      <div class="absolute inset-0 bg-neon-green opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                      <img :src="getImageUrl(product.image_url)" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
-                   </div>
-                   <div class="p-4 text-center">
-                      <h3 class="font-bold text-lg mb-1 text-gray-800">{{ product.name }}</h3>
-                      <p class="text-sm text-gray-500 mb-2 line-clamp-2">{{ product.description }}</p>
-                      <div class="text-neon-green font-extrabold text-xl mb-3">RP {{ product.price.toLocaleString() }}</div>
-                      <button @click="addToCart(product)" class="bg-neon-green text-black px-4 py-2 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-sm">Beli</button>
-                   </div>
+                <div v-for="product in products" :key="product.id" class="min-w-[280px] max-w-xs w-full flex-shrink-0">
+                  <ProductCard :product="product" @added="() => toast.show('Produk ditambahkan ke keranjang', 'success')" />
                 </div>
              </div>
           </div>
@@ -272,7 +264,7 @@ const submitComment = async () => {
                   <textarea v-model="commentText" rows="4" placeholder="Tulis komentar Anda..." class="w-full bg-gray-50 border border-gray-200 p-3 rounded-lg"></textarea>
                </div>
                <div class="flex justify-end">
-                  <button type="submit" class="bg-neon-green text-black px-6 py-2 rounded-full font-bold hover:bg-[#00cc00]">Kirim Komentar</button>
+                  <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-full font-bold hover:bg-red-400 transition-colors">Kirim Komentar</button>
                </div>
             </form>
 

@@ -63,6 +63,38 @@ func InitDB() {
 	// Print success message
 	fmt.Println("Database connected successfully!")
 
+	// Ensure user_id in orders table allows NULL (for guest orders)
+	_, err = DB.Exec("ALTER TABLE orders MODIFY user_id INT NULL")
+	if err != nil {
+		log.Println("Warning: could not modify orders.user_id to NULL:", err)
+	}
+
+	// Ensure session_id column exists in orders table (for guest tracking)
+	var sessionIdCount int
+	q := `SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'session_id'`
+	err = DB.QueryRow(q, dbName).Scan(&sessionIdCount)
+	if err != nil || sessionIdCount == 0 {
+		_, err = DB.Exec("ALTER TABLE orders ADD COLUMN session_id VARCHAR(255) AFTER user_id")
+		if err != nil {
+			log.Println("Warning: could not add session_id column to orders:", err)
+		} else {
+			log.Println("Added session_id column to orders table")
+		}
+	}
+
+	// Ensure guest_info column exists in orders table
+	var guestInfoCount int
+	q = `SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'guest_info'`
+	err = DB.QueryRow(q, dbName).Scan(&guestInfoCount)
+	if err != nil || guestInfoCount == 0 {
+		_, err = DB.Exec("ALTER TABLE orders ADD COLUMN guest_info JSON AFTER session_id")
+		if err != nil {
+			log.Println("Warning: could not add guest_info column to orders:", err)
+		} else {
+			log.Println("Added guest_info column to orders table")
+		}
+	}
+
 	// Ensure a default 'Uncategorized' category exists to avoid FK issues
 	_, err = DB.Exec("INSERT INTO categories (name, slug) SELECT ?, ? FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM categories WHERE slug = ?)", "Uncategorized", "uncategorized", "uncategorized")
 	if err != nil {
@@ -70,4 +102,55 @@ func InitDB() {
 	} else {
 		log.Println("Ensured default category 'uncategorized' exists or was already present")
 	}
+
+	// Ensure cart_items.session_id column exists (migration safety)
+	// Some older databases may be missing this column; add it only if absent using INFORMATION_SCHEMA.
+	var colCount int
+	q = `SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'cart_items' AND COLUMN_NAME = 'session_id'`
+	err = DB.QueryRow(q, dbName).Scan(&colCount)
+	if err != nil {
+		log.Println("Warning: could not verify cart_items.session_id existence:", err)
+	} else if colCount == 0 {
+		_, err = DB.Exec("ALTER TABLE cart_items ADD COLUMN session_id VARCHAR(255)")
+		if err != nil {
+			log.Println("Warning: could not add cart_items.session_id column:", err)
+		} else {
+			log.Println("Added cart_items.session_id column")
+		}
+	} else {
+		log.Println("cart_items.session_id column already present")
+	}
+
+	// Ensure demo products exist
+	ensureDemoProducts()
 }
+
+// ensureDemoProducts adds demo products if none exist
+func ensureDemoProducts() {
+	var count int
+	err := DB.QueryRow("SELECT COUNT(*) FROM products").Scan(&count)
+	if err != nil {
+		log.Println("Warning: could not count products:", err)
+		return
+	}
+
+	if count == 0 {
+		log.Println("No products found, adding demo products...")
+		_, err = DB.Exec(`INSERT INTO products (name, slug, description, price, stock, image_url, category_id) VALUES
+			(?, ?, ?, ?, ?, ?, ?),
+			(?, ?, ?, ?, ?, ?, ?),
+			(?, ?, ?, ?, ?, ?, ?),
+			(?, ?, ?, ?, ?, ?, ?)`,
+			"Produk 1", "produk-1", "Kualitas terbaik", 10000, 10, "http://localhost:8080/uploads/product1.jpg", 1,
+			"Produk 2", "produk-2", "Sangat bagus", 15000, 8, "http://localhost:8080/uploads/product2.jpg", 1,
+			"Produk 3", "produk-3", "Murah meriah", 25000, 5, "http://localhost:8080/uploads/product3.jpg", 1,
+			"Produk 4", "produk-4", "Limited Edition", 50000, 3, "http://localhost:8080/uploads/product4.jpg", 1,
+		)
+		if err != nil {
+			log.Println("Warning: could not insert demo products:", err)
+		} else {
+			log.Println("Demo products added successfully")
+		}
+	} else {
+		log.Printf("Products table already has %d products\n", count)
+	}}

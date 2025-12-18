@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useCartStore } from '../stores/cart';
 import { useRouter } from 'vue-router';
 import { useToastStore } from '../stores/toast';
+import api from '../services/api';
+import { getProvincesArray, getCitiesForProvince } from '../data/indonesianRegions';
 
 const cartStore = useCartStore();
 const router = useRouter();
 const toast = useToastStore();
+
+// Pastikan session_id selalu ada di localStorage
+if (!localStorage.getItem('session_id')) {
+    localStorage.setItem('session_id', 'session-' + Math.random().toString(36).substring(2, 12));
+}
 
 // Steps: 1 = Check Stock, 2 = Form, 3 = Confirmation
 const step = ref(1);
@@ -19,8 +26,15 @@ const form = ref({
     lastName: '',
     email: '',
     address: '',
+    province: '',
     city: '',
+    zipCode: '',
     phone: ''
+});
+
+const provinces = ref<string[]>([]);
+const citiesForProvince = computed(() => {
+    return form.value.province ? getCitiesForProvince(form.value.province) : [];
 });
 
 const paymentMethod = ref('COD');
@@ -30,12 +44,8 @@ const checkStock = async () => {
     stockLoading.value = true;
     stockIssues.value = [];
     try {
-        const sessionId = localStorage.getItem('session_id');
-        const headers: any = {};
-        if (sessionId) headers['X-Session-ID'] = sessionId;
-
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/cart/validate-stock`, { headers });
-        const data = await res.json();
+        const res = await api.get('/cart/validate-stock');
+        const data = res.data;
 
         if (data.valid) {
             stockValid.value = true;
@@ -45,24 +55,28 @@ const checkStock = async () => {
             stockIssues.value = data.issues;
             // Stay on Step 1 (Error View)
         }
-    } catch (e) {
+    } catch (e: any) {
+        console.error('Validate stock error', e);
         toast.show("Gagal mengecek stok", "error");
     } finally {
         stockLoading.value = false;
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
+    // Ensure cart is loaded before validating
+    await cartStore.fetchCart();
     if (cartStore.items.length === 0) {
         router.push('/cart');
         return;
     }
+    provinces.value = getProvincesArray();
     checkStock();
 });
 
 const goToConfirmation = () => {
-    if (!form.value.firstName || !form.value.email || !form.value.address) {
-        toast.show("Mohon lengkapi data diri.", "error");
+    if (!form.value.firstName || !form.value.email || !form.value.address || !form.value.province || !form.value.city || !form.value.zipCode || !form.value.phone) {
+        toast.show("Mohon lengkapi semua data diri.", "error");
         return;
     }
     step.value = 3;
@@ -70,28 +84,43 @@ const goToConfirmation = () => {
 
 const handleCheckout = async () => {
     const guestInfo = {
-        name: `${form.value.firstName} ${form.value.lastName}`,
+        full_name: `${form.value.firstName} ${form.value.lastName}`,
         email: form.value.email,
-        address: `${form.value.address}, ${form.value.city}`,
+        address: form.value.address,
+        province: form.value.province,
+        city: form.value.city,
+        postal_code: form.value.zipCode,
         phone: form.value.phone
     };
 
-    // Final attempt
     try {
+        console.log('Starting checkout with guest info:', guestInfo);
         const data = await cartStore.checkout(guestInfo);
+        console.log('Checkout response:', data);
+        
         if (data && data.order_id) {
             toast.show("Pesanan berhasil dibuat!", "success");
-            router.push(`/invoice/${data.order_id}`);
+            console.log('Order created:', data.order_id);
+            // Coba redirect ke invoice, jika gagal redirect ke halaman pembangunan
+            try {
+                await router.push(`/invoice/${data.order_id}`);
+            } catch (err) {
+                console.error('Failed to redirect to invoice:', err);
+                router.push('/under-construction');
+            }
+        } else {
+            console.warn('No order_id in response:', data);
+            toast.show("Error: Pesanan tidak mendapat ID", "error");
+            router.push('/under-construction');
         }
     } catch (e: any) {
-        // If 409 Conflict (Stock), go back to step 1
-        if (e.response && e.response.status === 409) {
-            toast.show(e.response.data || "Stok tidak mencukupi.", "error");
-            step.value = 1;
-            checkStock(); // Re-validate
-        } else {
-            toast.show("Checkout gagal.", "error");
-        }
+        console.error('Checkout error:', e.response?.data || e.message);
+        const errorMsg = e.response?.data?.message || e.message || 'Gagal memproses pesanan';
+        toast.show(`Error: ${errorMsg}`, 'error');
+        // Redirect ke halaman pembangunan setelah error
+        setTimeout(() => {
+            router.push('/under-construction');
+        }, 2000);
     }
 };
 </script>
@@ -119,7 +148,7 @@ const handleCheckout = async () => {
                 </div>
                 <div class="flex gap-4 justify-center">
                     <router-link to="/cart" class="bg-gray-200 px-6 py-3 rounded-full font-bold">Kembali ke Keranjang</router-link>
-                    <button @click="checkStock" class="bg-neon-green px-6 py-3 rounded-full font-bold">Coba Lagi</button>
+                    <button @click="checkStock" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-400 transition-colors">Coba Lagi</button>
                 </div>
             </div>
         </div>
@@ -135,7 +164,7 @@ const handleCheckout = async () => {
                  <form class="space-y-6" @submit.prevent="goToConfirmation">
                      <div class="grid grid-cols-2 gap-6">
                          <div>
-                             <label class="block text-sm font-bold mb-2 text-gray-500">Nama Depan</label>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">Nama Depan <span class="text-red-500">*</span></label>
                              <input v-model="form.firstName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
                          </div>
                          <div>
@@ -144,20 +173,34 @@ const handleCheckout = async () => {
                          </div>
                      </div>
                      <div>
-                         <label class="block text-sm font-bold mb-2 text-gray-500">Email</label>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Email <span class="text-red-500">*</span></label>
                          <input v-model="form.email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
                      </div>
                      <div>
-                         <label class="block text-sm font-bold mb-2 text-gray-500">Alamat</label>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Alamat <span class="text-red-500">*</span></label>
                          <input v-model="form.address" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
                      </div>
+                     <div>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Provinsi <span class="text-red-500">*</span></label>
+                         <select v-model="form.province" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                             <option value="">Pilih Provinsi</option>
+                             <option v-for="prov in provinces" :key="prov" :value="prov">{{ prov }}</option>
+                         </select>
+                     </div>
+                     <div v-if="form.province">
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Kota/Kabupaten <span class="text-red-500">*</span></label>
+                         <select v-model="form.city" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                             <option value="">Pilih Kota</option>
+                             <option v-for="city in citiesForProvince" :key="city" :value="city">{{ city }}</option>
+                         </select>
+                     </div>
                      <div class="grid grid-cols-2 gap-6">
-                         <div>
-                             <label class="block text-sm font-bold mb-2 text-gray-500">Kota</label>
-                             <input v-model="form.city" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                        <div>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">Kode Pos <span class="text-red-500">*</span></label>
+                             <input v-model="form.zipCode" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
                          </div>
                          <div>
-                             <label class="block text-sm font-bold mb-2 text-gray-500">No. HP</label>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">No. HP <span class="text-red-500">*</span></label>
                              <input v-model="form.phone" type="tel" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
                          </div>
                      </div>
@@ -170,13 +213,13 @@ const handleCheckout = async () => {
                         <label class="flex items-center gap-3 p-4 border border-neon-green bg-green-50 rounded-xl cursor-pointer">
                             <input type="radio" v-model="paymentMethod" value="COD" checked class="accent-neon-green w-5 h-5">
                             <div>
-                                <span class="font-bold block">COD (Cash on Delivery)</span>
-                                <span class="text-sm text-gray-500">Bayar ditempat saat kurir tiba.</span>
+                                <span class="font-bold block">COD (Bayar di Tempat)</span>
+                                <span class="text-sm text-gray-500">Bayar di tempat saat kurir tiba.</span>
                             </div>
                         </label>
                      </div>
 
-                     <button type="submit" class="w-full bg-black text-white py-4 rounded-full font-bold hover:bg-gray-800 transition-colors mt-6">
+                     <button type="submit" class="w-full bg-red-600 text-white py-4 rounded-full font-bold hover:bg-red-400 transition-colors mt-6">
                          Lanjut ke Konfirmasi
                      </button>
                  </form>
@@ -193,9 +236,10 @@ const handleCheckout = async () => {
                      <div class="bg-gray-50 p-4 rounded-xl">
                          <h3 class="font-bold text-gray-500 text-sm uppercase mb-2">Dikirim ke:</h3>
                          <p class="font-bold">{{ form.firstName }} {{ form.lastName }}</p>
-                         <p>{{ form.address }}, {{ form.city }}</p>
-                         <p>{{ form.phone }}</p>
-                         <button @click="step = 2" class="text-sm text-neon-green font-bold mt-2 underline">Ubah Data</button>
+                         <p class="text-sm">{{ form.address }}</p>
+                         <p class="text-sm">{{ form.city }}, {{ form.province }} {{ form.zipCode }}</p>
+                         <p class="text-sm">{{ form.phone }}</p>
+                         <button @click="step = 2" class="text-sm bg-red-600 text-white font-bold mt-2 px-3 py-1 rounded hover:bg-red-400 transition-colors">Ubah Data</button>
                      </div>
 
                      <div class="bg-gray-50 p-4 rounded-xl">
@@ -204,14 +248,14 @@ const handleCheckout = async () => {
                     </div>
                  </div>
 
-                 <button @click="handleCheckout" class="w-full bg-neon-green text-black py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
-                     Konfirmasi & Proses Pesanan
+                 <button @click="handleCheckout" class="w-full bg-red-600 text-white font-bold py-3 rounded-full hover:bg-red-400 transition-colors">
+                    Konfirmasi & Proses Pesanan
                  </button>
              </div>
 
              <!-- Order Summary (Always Visible) -->
              <div class="bg-white p-8 rounded-[2rem] shadow-lg h-fit">
-                 <h2 class="text-2xl font-bold mb-6">Ringkasan</h2>
+                 <h2 class="text-2xl font-bold mb-6">Ringkasan Pesanan</h2>
                  <div class="space-y-4 mb-8">
                      <div v-for="item in cartStore.items" :key="item.id" class="flex justify-between items-center py-2 border-b border-gray-50">
                          <span class="text-gray-700 font-medium">{{ item.product.name }} <span class="text-xs text-gray-400">x{{ item.quantity }}</span></span>

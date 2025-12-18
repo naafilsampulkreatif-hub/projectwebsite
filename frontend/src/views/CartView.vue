@@ -7,11 +7,43 @@ const cartStore = useCartStore();
 const router = useRouter();
 
 onMounted(() => {
-  cartStore.fetchCart();
+    cartStore.fetchCart();
 });
 
 const proceedToCheckout = () => {
-    router.push('/checkout');
+        router.push('/checkout');
+};
+
+const decrease = async (item: any) => {
+        const newQty = (item.quantity || 0) - 1;
+        try {
+            await cartStore.updateQuantity(item.product_id || item.product.id, newQty);
+        } catch (e) {
+            console.error('Failed to decrease quantity', e);
+        }
+};
+
+const increase = async (item: any) => {
+        const newQty = (item.quantity || 0) + 1;
+        try {
+            await cartStore.updateQuantity(item.product_id || item.product.id, newQty);
+        } catch (e) {
+            console.error('Failed to increase quantity', e);
+        }
+};
+
+const remove = async (item: any) => {
+        try {
+            await cartStore.removeItem(item.id);
+        } catch (e) {
+            console.error('Failed to remove item', e);
+        }
+};
+
+const fmtPrice = (p: any) => {
+    const n = (p === undefined || p === null) ? 0 : Number(p);
+    if (isNaN(n)) return '0';
+    return n.toLocaleString();
 };
 </script>
 
@@ -20,9 +52,13 @@ const proceedToCheckout = () => {
     <div class="container mx-auto px-4 py-12">
         <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-neon-green inline-block pb-2">Keranjang Belanja</h1>
 
-        <div v-if="cartStore.items.length === 0" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
+        <div v-if="cartStore.loading" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
+            <p class="text-gray-500 mb-6 text-xl">Memuat keranjang...</p>
+        </div>
+
+        <div v-else-if="cartStore.items.length === 0" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
             <p class="text-gray-500 mb-6 text-xl">Keranjang anda kosong.</p>
-            <router-link to="/" class="text-neon-green font-bold text-lg hover:underline uppercase tracking-widest">Lanjut Belanja ></router-link>
+            <router-link to="/shop" class="text-neon-green font-bold text-lg hover:underline uppercase tracking-widest">Lanjut Belanja ></router-link>
         </div>
 
         <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -37,19 +73,29 @@ const proceedToCheckout = () => {
                             <th class="pb-6 font-bold text-gray-400 uppercase tracking-wider text-sm">Total</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr v-for="item in cartStore.items" :key="item.id">
-                            <td class="py-6 flex items-center space-x-6">
-                                <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
-                                   <img :src="item.product.image_url || 'https://via.placeholder.com/150'" class="w-full h-full object-cover">
-                                </div>
-                                <span class="font-bold text-lg text-gray-800">{{ item.product.name }}</span>
-                            </td>
-                            <td class="py-6 font-medium text-gray-600">RP {{ item.product.price.toLocaleString() }}</td>
-                            <td class="py-6 font-medium text-gray-600">{{ item.quantity }}</td>
-                            <td class="py-6 font-extrabold text-neon-green text-lg">RP {{ (item.product.price * item.quantity).toLocaleString() }}</td>
-                        </tr>
-                    </tbody>
+                                        <tbody class="divide-y divide-gray-100">
+                                                <tr v-for="item in cartStore.items" :key="item.id">
+                                                        <td class="py-6 flex items-center space-x-6">
+                                                                <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+                                                                     <img :src="(item?.product?.image_url) || 'https://via.placeholder.com/150'" class="w-full h-full object-cover">
+                                                                </div>
+                                                                <div>
+                                                                    <div class="font-bold text-lg text-gray-800">{{ item?.product?.name || 'Produk' }}</div>
+                                                                    <div class="text-sm text-gray-500">SKU: {{ item.product.id }}</div>
+                                                                </div>
+                                                        </td>
+                                                        <td class="py-6 font-medium text-gray-600">RP {{ fmtPrice(item?.product?.price ?? item?.price) }}</td>
+                                                        <td class="py-6 font-medium text-gray-600">
+                                                            <div class="inline-flex items-center border rounded-full overflow-hidden">
+                                                                <button @click="decrease(item)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-400 transition-colors">-</button>
+                                                                <div class="px-4">{{ item.quantity ?? 0 }}</div>
+                                                                <button @click="increase(item)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-400 transition-colors">+</button>
+                                                            </div>
+                                                            <button @click="remove(item)" class="text-sm bg-red-600 text-white mt-2 px-3 py-1 rounded hover:bg-red-400 transition-colors">Hapus</button>
+                                                        </td>
+                                                        <td class="py-6 font-extrabold text-neon-green text-lg">RP {{ fmtPrice((item?.product?.price ?? item?.price) * (item.quantity ?? 0)) }}</td>
+                                                </tr>
+                                        </tbody>
                 </table>
             </div>
 
@@ -65,7 +111,7 @@ const proceedToCheckout = () => {
                     <span class="font-extrabold text-neon-green">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                 </div>
 
-                <button @click="proceedToCheckout" class="w-full bg-neon-green text-black py-4 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                <button @click="proceedToCheckout" class="w-full bg-red-600 text-white font-bold py-3 rounded-full hover:bg-red-400 transition-colors">
                     Checkout Sekarang
                 </button>
             </div>

@@ -42,6 +42,8 @@ func main() {
 	hybridRouter.Use(middleware.OptionalAuthMiddleware)
 	hybridRouter.HandleFunc("/cart", handlers.GetCart).Methods("GET")                        // View Cart
 	hybridRouter.HandleFunc("/cart", handlers.AddToCart).Methods("POST")                     // Add to Cart
+	hybridRouter.HandleFunc("/cart", handlers.UpdateCart).Methods("PUT")                     // Update cart (qty)
+	hybridRouter.HandleFunc("/cart/{id}", handlers.RemoveCartItem).Methods("DELETE")         // Remove cart item
 	hybridRouter.HandleFunc("/cart/validate-stock", handlers.ValidateStock).Methods("GET")   // Validate Stock
 	hybridRouter.HandleFunc("/checkout", handlers.Checkout).Methods("POST")                  // Checkout
 	hybridRouter.HandleFunc("/orders", handlers.GetOrders).Methods("GET")                    // My Orders (or Session Orders)

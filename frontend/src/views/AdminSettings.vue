@@ -181,7 +181,7 @@ const getActionBadge = (action: string) => {
           </div>
           <button
             @click="isEditingProfile = true"
-            class="bg-neon-green text-black font-bold px-6 py-2 rounded-full hover:bg-[#00cc00]"
+            class="bg-red-600 text-white font-bold px-6 py-2 rounded-full hover:bg-red-400"
           >
             Edit Profil
           </button>
@@ -207,7 +207,7 @@ const getActionBadge = (action: string) => {
           <div class="flex gap-2">
             <button
               @click="updateProfile"
-              class="flex-1 bg-neon-green text-black font-bold py-2 rounded hover:bg-[#00cc00]"
+              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400"
             >
               Simpan
             </button>
@@ -229,7 +229,7 @@ const getActionBadge = (action: string) => {
         <div v-if="!isChangingPassword" class="text-center py-8">
           <button
             @click="isChangingPassword = true"
-            class="bg-neon-green text-black font-bold px-6 py-3 rounded-full hover:bg-[#00cc00]"
+            class="bg-red-600 text-white font-bold px-6 py-3 rounded-full hover:bg-red-400"
           >
             Mulai Ganti Password
           </button>
@@ -266,7 +266,7 @@ const getActionBadge = (action: string) => {
           <div class="flex gap-2">
             <button
               @click="changePassword"
-              class="flex-1 bg-neon-green text-black font-bold py-2 rounded hover:bg-[#00cc00]"
+              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400"
             >
               Ubah Password
             </button>

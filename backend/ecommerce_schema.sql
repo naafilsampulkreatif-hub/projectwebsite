@@ -1,5 +1,10 @@
+-- Buat database baru
+drop database if exists ecommerce;
+create database ecommerce character set utf8mb4 collate utf8mb4_unicode_ci;
+use ecommerce;
+
 -- Create Users Table
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -9,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Create Categories Table
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
@@ -17,7 +22,7 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 -- Create Products Table
-CREATE TABLE IF NOT EXISTS products (
+CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT,
     name VARCHAR(255) NOT NULL,
@@ -31,7 +36,7 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- Create Orders Table
-CREATE TABLE IF NOT EXISTS orders (
+CREATE TABLE orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NULL, -- Nullable for guests
     session_id VARCHAR(255), -- For guest tracking
@@ -43,7 +48,7 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 -- Create Order Items Table
-CREATE TABLE IF NOT EXISTS order_items (
+CREATE TABLE order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
     product_id INT NOT NULL,
@@ -54,7 +59,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 -- Create Cart Items Table (Persistent Cart)
-CREATE TABLE IF NOT EXISTS cart_items (
+CREATE TABLE cart_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT, -- Nullable
     session_id VARCHAR(255), -- For guest carts
@@ -63,17 +68,13 @@ CREATE TABLE IF NOT EXISTS cart_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_cart_item (user_id, session_id, product_id) -- Composite key might be tricky with NULLs in MySQL, handling in code is safer or use generated column
+    UNIQUE KEY unique_cart_item (user_id, session_id, product_id)
 );
 
--- Note: MySQL Unique index with NULLs allows multiple NULLs.
--- We will handle the "one or the other" logic in the application layer or use a trigger/generated column if strictness is needed.
--- Ideally we migrate guest cart to user cart on login.
-
 -- Create Customer Info Table (Data diri dari user yang telah checkout)
-CREATE TABLE IF NOT EXISTS customer_info (
+CREATE TABLE customer_info (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
+    user_id INT NULL,
     session_id VARCHAR(255),
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
@@ -88,7 +89,7 @@ CREATE TABLE IF NOT EXISTS customer_info (
 );
 
 -- Create Admin Activity Log Table
-CREATE TABLE IF NOT EXISTS admin_activity_log (
+CREATE TABLE admin_activity_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     admin_id INT NOT NULL,
     action VARCHAR(255) NOT NULL,
@@ -100,7 +101,7 @@ CREATE TABLE IF NOT EXISTS admin_activity_log (
 );
 
 -- Create Comments Table
-CREATE TABLE IF NOT EXISTS comments (
+CREATE TABLE comments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
@@ -113,5 +114,5 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (moderated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Insert Default Admin (Password: admin123)
+-- Insert Default Admin (Password: admin123, hash sesuai kebutuhan)
 -- INSERT INTO users (name, email, password, role) VALUES ('Admin', 'admin@example.com', '$2a$10$YourHashedPasswordHere', 'admin');

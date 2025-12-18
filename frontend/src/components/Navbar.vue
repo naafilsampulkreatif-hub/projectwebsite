@@ -20,7 +20,7 @@ const authStore = useAuthStore()
       <div class="hidden md:flex space-x-8 font-semibold text-sm uppercase tracking-wide">
         <RouterLink to="/" class="hover:text-neon-green transition-colors">Home</RouterLink>
         <RouterLink to="/cart" class="hover:text-neon-green transition-colors">Keranjang</RouterLink>
-        <RouterLink to="/" class="hover:text-neon-green transition-colors">Toko</RouterLink>
+        <RouterLink to="/shop" class="hover:text-neon-green transition-colors">Toko</RouterLink>
         <RouterLink to="/login" class="hover:text-neon-green transition-colors">Admin</RouterLink>
 
         <RouterLink v-if="authStore.isAdmin" to="/admin" class="hover:text-neon-green transition-colors text-red-600">Dashboard</RouterLink>

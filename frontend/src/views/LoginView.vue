@@ -39,21 +39,21 @@ const handleLogin = async () => {
   <div class="min-h-screen bg-[#F3F3F3] text-black flex items-center justify-center">
     <div class="w-full max-w-md px-4">
         <div class="bg-white p-10 rounded-[2rem] shadow-xl">
-            <h1 class="text-3xl font-extrabold mb-8 text-center text-neon-green">LOGIN</h1>
+            <h1 class="text-3xl font-extrabold mb-8 text-center text-red-600">LOGIN</h1>
 
             <form @submit.prevent="handleLogin" class="space-y-6">
                 <div>
                     <label class="block text-sm font-bold mb-2 text-gray-500">Email Address</label>
-                    <input v-model="email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" placeholder="user@example.com" required>
+                    <input v-model="email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-red-600 transition-colors" placeholder="user@example.com" required>
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2 text-gray-500">Password</label>
-                    <input v-model="password" type="password" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" placeholder="••••••••" required>
+                    <input v-model="password" type="password" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-red-600 transition-colors" placeholder="••••••••" required>
                 </div>
 
                 <div v-if="error" class="text-red-500 text-sm font-bold text-center">{{ error }}</div>
 
-                <button type="submit" class="w-full bg-neon-green text-black py-3 rounded-full font-bold uppercase tracking-wider hover:bg-[#00cc00] transition-colors shadow-lg hover:shadow-neon-green/50">
+                <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-full font-bold uppercase tracking-wider hover:bg-red-400 transition-colors shadow-lg hover:shadow-red-600/50">
                     Masuk
                 </button>
             </form>

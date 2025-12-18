@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"ecommerce-backend/db"
@@ -37,10 +38,13 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 // GetCustomerInfo returns customer info for users who checked out
 func GetCustomerInfo(w http.ResponseWriter, r *http.Request) {
-	query := `SELECT id, user_id, session_id, full_name, email, phone, address, city, postal_code, created_at 
+	log.Printf("GetCustomerInfo called by user: %v", r.Context().Value("user_id"))
+	
+	query := `SELECT id, user_id, session_id, full_name, email, phone, address, province, city, postal_code, created_at 
 	          FROM customer_info ORDER BY created_at DESC`
 	rows, err := db.DB.Query(query)
 	if err != nil {
+		log.Printf("GetCustomerInfo query error: %v", err)
 		http.Error(w, "Failed to fetch customer info", http.StatusInternalServerError)
 		return
 	}
@@ -54,6 +58,7 @@ func GetCustomerInfo(w http.ResponseWriter, r *http.Request) {
 		Email      string `json:"email"`
 		Phone      string `json:"phone"`
 		Address    string `json:"address"`
+		Province   string `json:"province"`
 		City       string `json:"city"`
 		PostalCode string `json:"postal_code"`
 		CreatedAt  string `json:"created_at"`
@@ -62,12 +67,15 @@ func GetCustomerInfo(w http.ResponseWriter, r *http.Request) {
 	var customers []CustomerInfo
 	for rows.Next() {
 		var c CustomerInfo
-		if err := rows.Scan(&c.ID, &c.UserID, &c.SessionID, &c.FullName, &c.Email, &c.Phone, &c.Address, &c.City, &c.PostalCode, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.UserID, &c.SessionID, &c.FullName, &c.Email, &c.Phone, &c.Address, &c.Province, &c.City, &c.PostalCode, &c.CreatedAt); err != nil {
+			log.Printf("GetCustomerInfo scan error: %v", err)
 			continue
 		}
 		customers = append(customers, c)
 	}
 
+	log.Printf("GetCustomerInfo returning %d customers", len(customers))
+	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(customers)
 }

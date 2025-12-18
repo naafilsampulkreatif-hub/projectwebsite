@@ -1,34 +1,83 @@
 <script setup lang="ts">
 import { useCartStore } from '../stores/cart';
+import { useToastStore } from '../stores/toast';
+import { ref } from 'vue';
 
 const props = defineProps<{
   product: any;
 }>();
 
-const cartStore = useCartStore();
+const emit = defineEmits<{
+  (e: 'added', product: any): void
+}>();
 
-const addToCart = () => {
-  // Allow guests to add to cart; session_id is created automatically by api.ts
-  cartStore.addToCart(props.product.id);
+const cartStore = useCartStore();
+const toast = useToastStore();
+const loading = ref(false);
+
+const addToCart = async () => {
+  if (loading.value) return;
+  loading.value = true;
+  try {
+    // Allow guests to add to cart; session_id is created automatically by api.ts
+    await cartStore.addToCart(props.product.id);
+    // Refresh cart to ensure UI reflects new items
+    await cartStore.fetchCart();
+    // Notify parent components that the product was added
+    emit('added', true);
+    toast.show('Produk ditambahkan ke keranjang', 'success');
+  } catch (e) {
+    // Emit failure event for parent to handle if needed
+    emit('added', false);
+    console.error('Add to cart failed', e);
+    const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Gagal menambah ke keranjang';
+    toast.show(String(msg), 'error');
+  } finally {
+    loading.value = false;
+  }
 };
+
+// Helper: ensure image URL is absolute or starts with '/'
+function formatImageUrl(url: string) {
+  if (!url) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) return url;
+  return '/' + url;
+}
+
+// Format price safely
+function formatPrice(v: any) {
+  const n = Number(v) || 0;
+  return n.toLocaleString();
+}
 </script>
 
 <template>
-  <div class="bg-white group overflow-hidden">
-    <div class="relative h-64 bg-gray-100 mb-4 overflow-hidden">
-        <img :src="product.image_url || 'https://via.placeholder.com/300'" :alt="product.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-
-        <div class="absolute bottom-0 left-0 w-full p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <button @click="addToCart" class="w-full bg-primary text-white py-2 hover:bg-orange-600 transition-colors">
-                Add to Cart
-            </button>
-        </div>
+  <div class="w-full bg-white group overflow-hidden rounded-2xl shadow-md flex flex-col hover:shadow-xl transition-shadow duration-300">
+    <!-- Image area -->
+    <div class="w-full aspect-[3/4] bg-gray-100 overflow-hidden rounded-t-2xl flex items-center justify-center">
+      <img
+        :src="(product.image_url && formatImageUrl(product.image_url)) || 'https://via.placeholder.com/400x533?text=Product'"
+        :alt="product.name"
+        class="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-300"
+      />
     </div>
 
-    <div class="text-center">
-        <p class="text-gray-500 text-sm mb-1">Category</p>
-        <h3 class="text-lg text-gray-800 font-medium mb-1">{{ product.name }}</h3>
-        <p class="text-primary font-bold">${{ product.price }}</p>
+    <!-- Content area -->
+    <div class="p-4 flex-1 flex flex-col">
+      <div class="mb-3">
+        <div class="text-xs text-gray-400 mb-1">{{ product.category || 'Kategori' }}</div>
+        <h3 class="text-lg text-gray-900 font-semibold mb-2 line-clamp-2">{{ product.name }}</h3>
+        <div class="text-red-600 font-extrabold text-lg">RP {{ formatPrice(product.price) }}</div>
+      </div>
+
+      <div class="mt-auto">
+        <button :disabled="loading" @click="addToCart" aria-label="Add to cart" 
+          class="w-full bg-red-600 text-white rounded-full font-bold py-2 px-4 mt-2 transition-colors duration-200 hover:bg-red-400 disabled:opacity-60 disabled:cursor-not-allowed">
+          <span v-if="loading">Menambahkan...</span>
+          <span v-else>Tambah ke Keranjang</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>

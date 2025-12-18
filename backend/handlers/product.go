@@ -177,7 +177,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := db.DB.Exec("UPDATE products SET name=?, slug=?, description=?, price=?, stock=?, image_url=?, category_id=? WHERE id=?",
+	_, err = db.DB.Exec("UPDATE products SET name=?, slug=?, description=?, price=?, stock=?, image_url=?, category_id=? WHERE id=?",
 		p.Name, p.Slug, p.Description, p.Price, p.Stock, p.ImageURL, cid, id)
 
 	if err != nil {
