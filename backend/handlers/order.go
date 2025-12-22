@@ -269,9 +269,9 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 	err := db.DB.QueryRow(query, orderID).Scan(&o.ID, &uid, &sid, &o.TotalAmount, &o.Status, &guestInfoJSON, &o.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			http.Error(w, "Order not found", http.StatusNotFound)
+			writeJSONError(w, http.StatusNotFound, "Order not found")
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
@@ -279,9 +279,6 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 	// Authorization Check
 	// 1. If order belongs to user, check userID
 	// 2. If order belongs to session, check sessionID
-	// 3. Or if Admin (not implemented here yet, but middleware handles admin routes separately)
-
-	// Simplify: If userID matches, OK. If sessionID matches, OK.
 	authorized := false
 	log.Printf("DEBUG GetOrderInvoice: uid.Valid=%v, userID=%v, sid.Valid=%v, sessionID='%s', stored_sid='%s'", uid.Valid, userID, sid.Valid, sessionID, sid.String)
 	if uid.Valid && userID != nil && int(uid.Int64) == *userID {
@@ -291,7 +288,7 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !authorized {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeJSONError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -299,38 +296,10 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 	if len(guestInfoJSON) > 0 {
 		var g map[string]interface{}
 		json.Unmarshal(guestInfoJSON, &g)
-		// Assuming models.Order GuestInfo is map[string]interface{}
-		// If it's string, we keep it as string. But in models/order.go it might be different.
-		// Let's check models.Order definition or cast appropriately.
 		o.GuestInfo = g
 	}
 
-	// Fetch Order Items
-	rows, err := db.DB.Query(`SELECT oi.product_id, oi.quantity, oi.price, p.name
-	                          FROM order_items oi
-	                          JOIN products p ON oi.product_id = p.id
-	                          WHERE oi.order_id = ?`, o.ID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var item models.OrderItem
-		var name string
-		rows.Scan(&item.ProductID, &item.Quantity, &item.Price, &name)
-
-		// We can add product name to the response struct if we want,
-		// but models.OrderItem might not have it.
-		// For simplicity, let's create a response struct or map.
-		// Re-using OrderItem but attaching name via a map logic or modifying the struct is better.
-		// Let's rely on frontend fetching product details or just return a custom map.
-
-		// Actually, let's just make a composite struct for the response
-	}
-
-	// ... Refetching to be cleaner
+	// Fetch Order Items with product name
 	type InvoiceItem struct {
 		Name     string  `json:"name"`
 		Quantity int     `json:"quantity"`
@@ -340,16 +309,22 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 
 	var invoiceItems []InvoiceItem
 
-	// Reset rows
-	rows, _ = db.DB.Query(`SELECT oi.quantity, oi.price, p.name
+	rows, err := db.DB.Query(`SELECT oi.quantity, oi.price, p.name
 	                          FROM order_items oi
 	                          JOIN products p ON oi.product_id = p.id
 	                          WHERE oi.order_id = ?`, o.ID)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var i InvoiceItem
-		rows.Scan(&i.Quantity, &i.Price, &i.Name)
+		if err := rows.Scan(&i.Quantity, &i.Price, &i.Name); err != nil {
+			log.Printf("Error scanning invoice item: %v", err)
+			continue
+		}
 		i.Total = i.Price * float64(i.Quantity)
 		invoiceItems = append(invoiceItems, i)
 	}
@@ -375,7 +350,7 @@ func GetOrders(w http.ResponseWriter, r *http.Request) {
 func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
 	// Admin middleware already ensured the user is admin
 	log.Printf("AdminGetOrders called by user: %v", r.Context().Value("user_id"))
-	
+
 	rows, err := db.DB.Query(`SELECT id, user_id, session_id, guest_info, total_amount, status, created_at FROM orders ORDER BY created_at DESC`)
 	if err != nil {
 		log.Printf("AdminGetOrders query error: %v", err)
@@ -453,7 +428,39 @@ func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("AdminGetOrders returning %d orders", len(orders))
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(orders)
+}
+
+// AdminUpdateOrder updates order status
+func AdminUpdateOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderID := vars["id"]
+
+	var req map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	status, ok := req["status"].(string)
+	if !ok {
+		writeJSONError(w, http.StatusBadRequest, "Status is required")
+		return
+	}
+
+	_, err := db.DB.Exec("UPDATE orders SET status = ? WHERE id = ?", status, orderID)
+	if err != nil {
+		log.Printf("AdminUpdateOrder error: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":  "Order status updated",
+		"order_id": orderID,
+		"status":   status,
+	})
 }

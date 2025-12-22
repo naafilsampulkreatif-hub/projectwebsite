@@ -39,7 +39,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 // GetCustomerInfo returns customer info for users who checked out
 func GetCustomerInfo(w http.ResponseWriter, r *http.Request) {
 	log.Printf("GetCustomerInfo called by user: %v", r.Context().Value("user_id"))
-	
+
 	query := `SELECT id, user_id, session_id, full_name, email, phone, address, province, city, postal_code, created_at 
 	          FROM customer_info ORDER BY created_at DESC`
 	rows, err := db.DB.Query(query)
@@ -75,7 +75,7 @@ func GetCustomerInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("GetCustomerInfo returning %d customers", len(customers))
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(customers)
 }

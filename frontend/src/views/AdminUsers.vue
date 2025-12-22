@@ -2,15 +2,12 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import { useToastStore } from '../stores/toast'
-import ComingSoon from '../components/ComingSoon.vue'
 
 const toast = useToastStore()
 
 // User management
 const users = ref<any[]>([])
 const customers = ref<any[]>([])
-const selectedUser = ref<any>(null)
-const newRole = ref('customer')
 
 // Comment moderation
 const comments = ref<any[]>([])
@@ -121,14 +118,14 @@ const selectCommentForModeration = (comment: any) => {
 <template>
   <div class="space-y-8">
     <!-- Tab Navigation -->
-    <div class="flex gap-4 border-b">
+    <div class="flex gap-4 border-b border-amber-300">
       <button
         @click="activeTab = 'users'"
         :class="[
           'px-6 py-3 font-bold uppercase border-b-2 transition',
           activeTab === 'users'
-            ? 'border-neon-green text-neon-green'
-            : 'border-transparent text-gray-400 hover:text-gray-600'
+            ? 'border-amber-400 text-amber-600'
+            : 'border-transparent text-stone-400 hover:text-stone-600'
         ]"
       >
         Pengguna
@@ -138,8 +135,8 @@ const selectCommentForModeration = (comment: any) => {
         :class="[
           'px-6 py-3 font-bold uppercase border-b-2 transition',
           activeTab === 'customers'
-            ? 'border-neon-green text-neon-green'
-            : 'border-transparent text-gray-400 hover:text-gray-600'
+            ? 'border-amber-400 text-amber-600'
+            : 'border-transparent text-stone-400 hover:text-stone-600'
         ]"
       >
         Data Pelanggan
@@ -149,8 +146,8 @@ const selectCommentForModeration = (comment: any) => {
         :class="[
           'px-6 py-3 font-bold uppercase border-b-2 transition',
           activeTab === 'comments'
-            ? 'border-neon-green text-neon-green'
-            : 'border-transparent text-gray-400 hover:text-gray-600'
+            ? 'border-amber-400 text-amber-600'
+            : 'border-transparent text-stone-400 hover:text-stone-600'
         ]"
       >
         Moderasi Komentar
@@ -159,10 +156,10 @@ const selectCommentForModeration = (comment: any) => {
 
     <!-- Users Tab -->
     <div v-if="activeTab === 'users'" class="space-y-4">
-      <h2 class="text-2xl font-bold">Daftar Pengguna</h2>
+      <h2 class="text-2xl font-bold text-stone-800">Daftar Pengguna</h2>
       <div class="overflow-x-auto bg-white rounded-lg shadow">
         <table class="w-full">
-          <thead class="bg-gray-100 border-b">
+          <thead class="bg-stone-800 text-white border-b">
             <tr>
               <th class="px-4 py-3 text-left font-bold">ID</th>
               <th class="px-4 py-3 text-left font-bold">Nama</th>
@@ -173,21 +170,21 @@ const selectCommentForModeration = (comment: any) => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in users" :key="user.id" class="border-b hover:bg-gray-50">
-              <td class="px-4 py-3">{{ user.id }}</td>
+            <tr v-for="user in users" :key="user.id" class="border-b border-stone-200 hover:bg-stone-50">
+              <td class="px-4 py-3 font-bold">{{ user.id }}</td>
               <td class="px-4 py-3">{{ user.name }}</td>
               <td class="px-4 py-3">{{ user.email }}</td>
               <td class="px-4 py-3">
                 <select
                   :value="user.role"
-                  @change="updateUserRole(user.id, $event.target.value)"
-                  class="border rounded px-2 py-1"
+                  @change="updateUserRole(user.id, ($event.target as HTMLSelectElement).value)"
+                  class="border border-stone-300 rounded px-2 py-1 bg-orange-50 focus:outline-none focus:border-amber-400"
                 >
                   <option value="customer">Customer</option>
                   <option value="admin">Admin</option>
                 </select>
               </td>
-              <td class="px-4 py-3 text-sm text-gray-500">{{ new Date(user.created_at).toLocaleDateString() }}</td>
+              <td class="px-4 py-3 text-sm text-stone-500">{{ new Date(user.created_at).toLocaleDateString('id-ID') }}</td>
               <td class="px-4 py-3">
                 <button
                   @click="deleteUser(user.id)"
@@ -199,19 +196,45 @@ const selectCommentForModeration = (comment: any) => {
             </tr>
           </tbody>
         </table>
-        <div v-if="users.length === 0" class="p-4 text-center text-gray-500">Tidak ada pengguna</div>
+        <div v-if="users.length === 0" class="p-4 text-center text-stone-500">Tidak ada pengguna</div>
       </div>
     </div>
 
     <!-- Customers Tab -->
     <div v-if="activeTab === 'customers'" class="space-y-4">
-      <h2 class="text-2xl font-bold">Data Pelanggan yang Checkout</h2>
-      <ComingSoon />
+      <h2 class="text-2xl font-bold text-stone-800">Data Pelanggan yang Checkout</h2>
+      <div v-if="customers.length === 0" class="text-center py-12 bg-stone-100 rounded-lg">
+        <p class="text-stone-600">Tidak ada data pelanggan</p>
+      </div>
+      <div v-else class="overflow-x-auto">
+        <table class="w-full bg-white rounded-lg shadow border-collapse">
+          <thead class="bg-stone-800 text-white">
+            <tr>
+              <th class="px-4 py-3 text-left font-bold">Nama</th>
+              <th class="px-4 py-3 text-left font-bold">Email</th>
+              <th class="px-4 py-3 text-left font-bold">No. HP</th>
+              <th class="px-4 py-3 text-left font-bold">Alamat</th>
+              <th class="px-4 py-3 text-left font-bold">Kota</th>
+              <th class="px-4 py-3 text-left font-bold">Terdaftar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="customer in customers" :key="customer.id" class="border-b border-stone-200 hover:bg-stone-50">
+              <td class="px-4 py-3 font-bold text-stone-800">{{ customer.full_name }}</td>
+              <td class="px-4 py-3 text-stone-700">{{ customer.email }}</td>
+              <td class="px-4 py-3 text-stone-700">{{ customer.phone }}</td>
+              <td class="px-4 py-3 text-stone-700 max-w-xs truncate">{{ customer.address }}</td>
+              <td class="px-4 py-3 text-stone-700">{{ customer.city }}</td>
+              <td class="px-4 py-3 text-sm text-stone-500">{{ new Date(customer.created_at).toLocaleDateString('id-ID') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Comments Tab -->
     <div v-if="activeTab === 'comments'" class="space-y-4">
-      <h2 class="text-2xl font-bold">Moderasi Komentar</h2>
+      <h2 class="text-2xl font-bold text-stone-800">Moderasi Komentar</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Comments List -->
         <div class="space-y-3">
@@ -222,12 +245,12 @@ const selectCommentForModeration = (comment: any) => {
             :class="[
               'p-4 rounded-lg cursor-pointer border-2 transition',
               selectedComment?.id === comment.id
-                ? 'border-neon-green bg-green-50'
-                : 'border-gray-200 bg-white hover:border-neon-green'
+                ? 'border-amber-400 bg-orange-50'
+                : 'border-stone-200 bg-white hover:border-amber-400'
             ]"
           >
             <div class="flex justify-between items-start mb-2">
-              <div class="font-bold">{{ comment.name }}</div>
+              <div class="font-bold text-stone-800">{{ comment.name }}</div>
               <span
                 :class="[
                   'text-xs font-bold px-2 py-1 rounded',
@@ -241,26 +264,26 @@ const selectCommentForModeration = (comment: any) => {
                 {{ comment.status }}
               </span>
             </div>
-            <div class="text-sm text-gray-600 mb-2">{{ comment.email }}</div>
-            <p class="text-sm text-gray-700 line-clamp-2">{{ comment.text }}</p>
+            <div class="text-sm text-stone-600 mb-2">{{ comment.email }}</div>
+            <p class="text-sm text-stone-700 line-clamp-2">{{ comment.text }}</p>
           </div>
-          <div v-if="comments.length === 0" class="text-center text-gray-500 py-8">Tidak ada komentar</div>
+          <div v-if="comments.length === 0" class="text-center text-stone-500 py-8">Tidak ada komentar</div>
         </div>
 
         <!-- Moderation Form -->
-        <div v-if="selectedComment" class="bg-white p-6 rounded-lg shadow space-y-4">
-          <h3 class="text-xl font-bold">Detail Komentar</h3>
+        <div v-if="selectedComment" class="bg-white p-6 rounded-lg shadow space-y-4 border border-amber-200">
+          <h3 class="text-xl font-bold text-stone-800">Detail Komentar</h3>
 
-          <div class="bg-gray-50 p-4 rounded">
-            <p class="font-bold mb-2">Komentar:</p>
-            <p class="text-gray-700">{{ selectedComment.text }}</p>
+          <div class="bg-orange-50 p-4 rounded border border-orange-200">
+            <p class="font-bold mb-2 text-stone-800">Komentar:</p>
+            <p class="text-stone-700">{{ selectedComment.text }}</p>
           </div>
 
           <div class="space-y-2">
-            <label class="block font-bold">Status</label>
+            <label class="block font-bold text-stone-800">Status</label>
             <select
               v-model="moderationStatus"
-              class="w-full border rounded px-3 py-2"
+              class="w-full border border-stone-300 rounded px-3 py-2 bg-orange-50 focus:outline-none focus:border-amber-400"
             >
               <option value="pending">Pending</option>
               <option value="approved">Disetujui</option>
@@ -269,32 +292,32 @@ const selectCommentForModeration = (comment: any) => {
           </div>
 
           <div class="space-y-2">
-            <label class="block font-bold">Catatan Admin</label>
+            <label class="block font-bold text-stone-800">Catatan Admin</label>
             <textarea
               v-model="moderationNotes"
               rows="4"
               placeholder="Tuliskan catatan (opsional)"
-              class="w-full border rounded px-3 py-2"
+              class="w-full border border-stone-300 rounded px-3 py-2 bg-orange-50 focus:outline-none focus:border-amber-400"
             ></textarea>
           </div>
 
           <div class="flex gap-2">
             <button
               @click="moderateComment(selectedComment.id, moderationStatus, moderationNotes)"
-              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400 transition-colors"
+              class="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 rounded transition-colors"
             >
               Simpan
             </button>
             <button
               @click="deleteComment(selectedComment.id)"
-              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400 transition-colors"
+              class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded transition-colors"
             >
               Hapus
             </button>
           </div>
         </div>
 
-        <div v-else class="bg-gray-50 p-6 rounded-lg flex items-center justify-center text-gray-500">
+        <div v-else class="bg-orange-50 p-6 rounded-lg flex items-center justify-center text-stone-500 border border-orange-200">
           Pilih komentar untuk dimoderasi
         </div>
       </div>

@@ -18,9 +18,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#F3F3F3] text-black">
+  <div class="min-h-screen bg-white text-black">
     <div class="container mx-auto px-4 py-12">
-        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-neon-green inline-block pb-2">Riwayat Pesanan</h1>
+        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-blue-500 inline-block pb-2">Riwayat Pesanan</h1>
 
         <div v-if="loading" class="text-center py-12">
             <p>Loading...</p>
@@ -28,7 +28,7 @@ onMounted(async () => {
 
         <div v-else-if="orders.length === 0" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
             <p class="text-gray-500 mb-6 text-xl">Belum ada pesanan.</p>
-            <router-link to="/" class="text-neon-green font-bold text-lg hover:underline uppercase tracking-widest">Mulai Belanja ></router-link>
+            <router-link to="/" class="text-blue-500 font-bold text-lg hover:underline uppercase tracking-widest">Mulai Belanja ></router-link>
         </div>
 
         <div v-else class="space-y-6">
@@ -39,7 +39,7 @@ onMounted(async () => {
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="inline-block px-4 py-1 rounded-full text-sm font-bold bg-gray-100 text-gray-600 uppercase">{{ order.status }}</span>
-                    <span class="font-extrabold text-neon-green text-xl">RP {{ order.total_amount.toLocaleString() }}</span>
+                    <span class="font-extrabold text-blue-500 text-xl">RP {{ order.total_amount.toLocaleString() }}</span>
                 </div>
             </div>
         </div>

@@ -9,8 +9,10 @@ export default {
       colors: {
         'primary': '#cc9966', // Molla orange/gold
         'secondary': '#333333',
+        'neon-green': '#84cc16', // Lime green from Tailwind
       }
     },
   },
   plugins: [],
 }
+

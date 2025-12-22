@@ -113,5 +113,14 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (moderated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Insert Default Admin (Password: admin123)
--- INSERT INTO users (name, email, password, role) VALUES ('Admin', 'admin@example.com', '$2a$10$YourHashedPasswordHere', 'admin');
+-- Create Support Messages Table
+CREATE TABLE IF NOT EXISTS support_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    session_id VARCHAR(255),
+    message TEXT NOT NULL,
+    type ENUM('user', 'support') DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+

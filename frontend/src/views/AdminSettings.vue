@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import api from '../services/api'
 import { useToastStore } from '../stores/toast'
 import { useAuthStore } from '../stores/auth'
@@ -22,12 +22,18 @@ const isChangingPassword = ref(false)
 const activityLog = ref<any[]>([])
 const userStats = ref<any>(null)
 
+// Customer Info
+const customerInfo = ref<any[]>([])
+const loadingCustomerInfo = ref(false)
+const searchCustomer = ref('')
+
 // Tab switching
-const activeTab = ref<'profile' | 'password' | 'activity' | 'stats'>('profile')
+const activeTab = ref<'profile' | 'password' | 'activity' | 'stats' | 'customers'>('profile')
 
 onMounted(async () => {
   await loadAdminProfile()
   await loadActivityLog()
+
   await loadStats()
 })
 
@@ -59,6 +65,31 @@ const loadStats = async () => {
     console.error('Failed to load stats', e)
   }
 }
+
+const loadCustomerInfo = async () => {
+  loadingCustomerInfo.value = true
+  try {
+    const res = await api.get('/admin/customer-info')
+    customerInfo.value = res.data || []
+  } catch (e) {
+    console.error('Failed to load customer info', e)
+    toast.show('Gagal memuat data pelanggan', 'error')
+  } finally {
+    loadingCustomerInfo.value = false
+  }
+}
+
+const filteredCustomers = computed(() => {
+  if (!searchCustomer.value) {
+    return customerInfo.value
+  }
+  const query = searchCustomer.value.toLowerCase()
+  return customerInfo.value.filter(c =>
+    c.full_name?.toLowerCase().includes(query) ||
+    c.email?.toLowerCase().includes(query) ||
+    c.phone?.includes(query)
+  )
+})
 
 const updateProfile = async () => {
   try {
@@ -102,31 +133,19 @@ const changePassword = async () => {
     toast.show(e.response?.data || 'Gagal mengubah password', 'error')
   }
 }
-
-const getActionBadge = (action: string) => {
-  const colors: Record<string, string> = {
-    'create_product': 'bg-blue-100 text-blue-700',
-    'update_product': 'bg-yellow-100 text-yellow-700',
-    'delete_product': 'bg-red-100 text-red-700',
-    'manage_order': 'bg-purple-100 text-purple-700',
-    'moderate_comment': 'bg-green-100 text-green-700',
-    'delete_comment': 'bg-red-100 text-red-700'
-  }
-  return colors[action] || 'bg-gray-100 text-gray-700'
-}
 </script>
 
 <template>
   <div class="space-y-8">
     <!-- Tab Navigation -->
-    <div class="flex gap-4 border-b overflow-x-auto">
+    <div class="flex gap-2 md:gap-4 border-b overflow-x-auto pb-0">
       <button
         @click="activeTab = 'profile'"
         :class="[
-          'px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap',
+          'px-4 md:px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap text-sm md:text-base',
           activeTab === 'profile'
-            ? 'border-neon-green text-neon-green'
-            : 'border-transparent text-gray-400 hover:text-gray-600'
+            ? 'border-emerald-500 text-emerald-600'
+            : 'border-transparent text-slate-400 hover:text-slate-600'
         ]"
       >
         Profil
@@ -134,21 +153,32 @@ const getActionBadge = (action: string) => {
       <button
         @click="activeTab = 'password'"
         :class="[
-          'px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap',
+          'px-4 md:px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap text-sm md:text-base',
           activeTab === 'password'
-            ? 'border-neon-green text-neon-green'
-            : 'border-transparent text-gray-400 hover:text-gray-600'
+            ? 'border-emerald-500 text-emerald-600'
+            : 'border-transparent text-slate-400 hover:text-slate-600'
         ]"
       >
-        Ganti Password
+        Password
+      </button>
+      <button
+        @click="activeTab = 'customers'; loadCustomerInfo()"
+        :class="[
+          'px-4 md:px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap text-sm md:text-base',
+          activeTab === 'customers'
+            ? 'border-emerald-500 text-emerald-600'
+            : 'border-transparent text-slate-400 hover:text-slate-600'
+        ]"
+      >
+        Data Pelanggan
       </button>
       <button
         @click="activeTab = 'stats'"
         :class="[
-          'px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap',
+          'px-4 md:px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap text-sm md:text-base',
           activeTab === 'stats'
-            ? 'border-neon-green text-neon-green'
-            : 'border-transparent text-gray-400 hover:text-gray-600'
+            ? 'border-emerald-500 text-emerald-600'
+            : 'border-transparent text-slate-400 hover:text-slate-600'
         ]"
       >
         Statistik
@@ -156,32 +186,32 @@ const getActionBadge = (action: string) => {
       <button
         @click="activeTab = 'activity'"
         :class="[
-          'px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap',
+          'px-4 md:px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap text-sm md:text-base',
           activeTab === 'activity'
-            ? 'border-neon-green text-neon-green'
-            : 'border-transparent text-gray-400 hover:text-gray-600'
+            ? 'border-emerald-500 text-emerald-600'
+            : 'border-transparent text-slate-400 hover:text-slate-600'
         ]"
       >
-        Riwayat Aktivitas
+        Aktivitas
       </button>
     </div>
 
     <!-- Profile Tab -->
     <div v-if="activeTab === 'profile'" class="max-w-2xl">
-      <h2 class="text-2xl font-bold mb-6">Profil Admin</h2>
-      <div class="bg-white p-8 rounded-lg shadow space-y-6">
+      <h2 class="text-2xl font-bold mb-6 text-slate-800">Profil Admin</h2>
+      <div class="bg-white p-8 rounded-lg shadow space-y-6 border border-slate-200">
         <div v-if="!isEditingProfile" class="space-y-4">
           <div>
-            <label class="text-sm text-gray-500 uppercase">Nama</label>
-            <p class="text-2xl font-bold">{{ adminName }}</p>
+            <label class="text-sm text-slate-500 uppercase font-bold">Nama</label>
+            <p class="text-2xl font-bold text-slate-800">{{ adminName }}</p>
           </div>
           <div>
-            <label class="text-sm text-gray-500 uppercase">Email</label>
-            <p class="text-2xl font-bold">{{ adminEmail }}</p>
+            <label class="text-sm text-slate-500 uppercase font-bold">Email</label>
+            <p class="text-2xl font-bold text-slate-800">{{ adminEmail }}</p>
           </div>
           <button
             @click="isEditingProfile = true"
-            class="bg-red-600 text-white font-bold px-6 py-2 rounded-full hover:bg-red-400"
+            class="bg-sky-500 text-white font-bold px-6 py-2 rounded-full hover:bg-sky-600"
           >
             Edit Profil
           </button>
@@ -207,7 +237,7 @@ const getActionBadge = (action: string) => {
           <div class="flex gap-2">
             <button
               @click="updateProfile"
-              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400"
+              class="flex-1 bg-emerald-500 text-white font-bold py-2 rounded hover:bg-emerald-600"
             >
               Simpan
             </button>
@@ -329,6 +359,59 @@ const getActionBadge = (action: string) => {
         <div v-if="activityLog.length === 0" class="text-center py-8 text-gray-500">
           Belum ada aktivitas
         </div>
+      </div>
+    </div>
+
+    <!-- Customers Tab -->
+    <div v-if="activeTab === 'customers'">
+      <h2 class="text-2xl font-bold mb-6 text-slate-800">Data Pelanggan</h2>
+      
+      <div class="bg-white p-6 rounded-lg shadow border border-slate-200 mb-6">
+        <input 
+          v-model="searchCustomer"
+          type="text"
+          placeholder="Cari berdasarkan nama, email, atau no. HP..."
+          class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 focus:outline-none focus:border-emerald-400"
+        />
+      </div>
+
+      <div class="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+        <div v-if="loadingCustomerInfo" class="p-8 text-center">
+          <p class="text-slate-600 animate-pulse">Memuat data pelanggan...</p>
+        </div>
+
+        <div v-else-if="filteredCustomers.length === 0" class="p-8 text-center">
+          <p class="text-slate-500">Tidak ada data pelanggan</p>
+        </div>
+
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th class="px-6 py-3 text-left font-bold text-slate-700">Nama Lengkap</th>
+                <th class="px-6 py-3 text-left font-bold text-slate-700">Email</th>
+                <th class="px-6 py-3 text-left font-bold text-slate-700">No. HP</th>
+                <th class="px-6 py-3 text-left font-bold text-slate-700">Alamat</th>
+                <th class="px-6 py-3 text-left font-bold text-slate-700">Kota</th>
+                <th class="px-6 py-3 text-left font-bold text-slate-700">Tanggal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              <tr v-for="customer in filteredCustomers" :key="customer.id" class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-bold text-slate-800">{{ customer.full_name }}</td>
+                <td class="px-6 py-4 text-slate-700">{{ customer.email }}</td>
+                <td class="px-6 py-4 text-slate-700">{{ customer.phone }}</td>
+                <td class="px-6 py-4 text-slate-700 text-sm">{{ customer.address }}</td>
+                <td class="px-6 py-4 text-slate-700">{{ customer.city }}, {{ customer.province }}</td>
+                <td class="px-6 py-4 text-xs text-slate-600">{{ new Date(customer.created_at).toLocaleDateString('id-ID') }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div v-if="filteredCustomers.length > 0" class="mt-4 text-slate-600 text-sm">
+        Total: {{ filteredCustomers.length }} pelanggan
       </div>
     </div>
   </div>

@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
 import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
 import InvoiceView from '../views/InvoiceView.vue'
+import UserProfileView from '../views/UserProfileView.vue'
 import AdminView from '../views/AdminView.vue'
 import AdminProducts from '../views/AdminProducts.vue'
 import AdminOrders from '../views/AdminOrders.vue'
@@ -28,6 +30,11 @@ const router = createRouter({
       component: LoginView
     },
     {
+      path: '/register',
+      name: 'register',
+      component: RegisterView
+    },
+    {
       path: '/cart',
       name: 'cart',
       component: CartView,
@@ -41,6 +48,12 @@ const router = createRouter({
       path: '/invoice/:id',
       name: 'invoice',
       component: InvoiceView,
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: UserProfileView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/orders',

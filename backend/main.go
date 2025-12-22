@@ -40,15 +40,17 @@ func main() {
 	// Hybrid Routes (User or Guest)
 	hybridRouter := r.PathPrefix("/api").Subrouter()
 	hybridRouter.Use(middleware.OptionalAuthMiddleware)
-	hybridRouter.HandleFunc("/cart", handlers.GetCart).Methods("GET")                        // View Cart
-	hybridRouter.HandleFunc("/cart", handlers.AddToCart).Methods("POST")                     // Add to Cart
-	hybridRouter.HandleFunc("/cart", handlers.UpdateCart).Methods("PUT")                     // Update cart (qty)
-	hybridRouter.HandleFunc("/cart/{id}", handlers.RemoveCartItem).Methods("DELETE")         // Remove cart item
-	hybridRouter.HandleFunc("/cart/validate-stock", handlers.ValidateStock).Methods("GET")   // Validate Stock
-	hybridRouter.HandleFunc("/checkout", handlers.Checkout).Methods("POST")                  // Checkout
-	hybridRouter.HandleFunc("/orders", handlers.GetOrders).Methods("GET")                    // My Orders (or Session Orders)
-	hybridRouter.HandleFunc("/orders/{id}/invoice", handlers.GetOrderInvoice).Methods("GET") // Get Invoice
-	hybridRouter.HandleFunc("/comments", handlers.CreateComment).Methods("POST")             // Create comment
+	hybridRouter.HandleFunc("/cart", handlers.GetCart).Methods("GET")                          // View Cart
+	hybridRouter.HandleFunc("/cart", handlers.AddToCart).Methods("POST")                       // Add to Cart
+	hybridRouter.HandleFunc("/cart", handlers.UpdateCart).Methods("PUT")                       // Update cart (qty)
+	hybridRouter.HandleFunc("/cart/{id}", handlers.RemoveCartItem).Methods("DELETE")           // Remove cart item
+	hybridRouter.HandleFunc("/cart/validate-stock", handlers.ValidateStock).Methods("GET")     // Validate Stock
+	hybridRouter.HandleFunc("/checkout", handlers.Checkout).Methods("POST")                    // Checkout
+	hybridRouter.HandleFunc("/invoice/{id}", handlers.GetOrderInvoice).Methods("GET")          // Get Invoice
+	hybridRouter.HandleFunc("/orders", handlers.GetOrders).Methods("GET")                      // My Orders (or Session Orders)
+	hybridRouter.HandleFunc("/comments", handlers.CreateComment).Methods("POST")               // Create comment
+	hybridRouter.HandleFunc("/support/message", handlers.CreateSupportMessage).Methods("POST") // Send support message
+	hybridRouter.HandleFunc("/support/messages", handlers.GetSupportMessages).Methods("GET")   // Get support messages
 
 	// Protected Routes (Admin)
 	adminRouter := r.PathPrefix("/api/admin").Subrouter()
@@ -59,6 +61,7 @@ func main() {
 	adminRouter.HandleFunc("/products/{id}", handlers.DeleteProduct).Methods("DELETE") // Delete Product
 	adminRouter.HandleFunc("/upload", handlers.UploadFile).Methods("POST")             // Upload File
 	adminRouter.HandleFunc("/orders", handlers.AdminGetOrders).Methods("GET")          // Admin: list orders
+	adminRouter.HandleFunc("/orders/{id}", handlers.AdminUpdateOrder).Methods("PUT")   // Admin: update order status
 	// New admin endpoints
 	adminRouter.HandleFunc("/users", handlers.GetUsers).Methods("GET")                                 // Get all users
 	adminRouter.HandleFunc("/users/{id}/role", handlers.UpdateUserRole).Methods("PUT")                 // Update user role

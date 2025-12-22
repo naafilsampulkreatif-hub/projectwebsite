@@ -123,16 +123,18 @@ const submitComment = async () => {
 </script>
 
 <template>
-  <div class="bg-[#F3F3F3] text-black pb-20">
+  <div class="bg-white text-black pb-20">
     <!-- Hero Section -->
       <div class="bg-white pb-2">
          <div class="relative h-[320px] sm:h-[400px] md:h-[500px] w-full overflow-hidden">
             <img :src="heroImage" alt="Hero" class="absolute inset-0 w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-neon-green/40 to-black/20"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-blue-500/40 to-black/20"></div>
             <div class="relative z-10 flex flex-col items-center justify-center h-full px-2">
-               <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white drop-shadow-lg tracking-tight text-center mb-4 animate-fade-in">
-                  <span class="block">NightStalkers</span>
-                  <span class="block text-lg md:text-2xl font-medium text-neon-green mt-2 tracking-wide">Misteri | Thriller</span>
+               <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white drop-shadow-lg tracking-tight text-center mb-4 animate-fade-in" style="font-family: 'TT Regard Demo', sans-serif;">
+                  <span class="block">
+                    <span class="text-red-600">Night</span><span>Stalkers</span>
+                  </span>
+                  <span class="block text-lg md:text-2xl font-medium text-blue-500 mt-2 tracking-wide">Misteri | Thriller</span>
                </h1>
                   <a href="https://www.webtoons.com/id/canvas/night-stalkers/list?title_no=1089184" target="_blank" rel="noopener" class="inline-block bg-red-600 text-white font-bold px-6 py-2 rounded-full shadow hover:bg-red-400 transition-colors text-base md:text-lg">Baca di Webtoon</a>
             </div>
@@ -193,9 +195,11 @@ const submitComment = async () => {
           <div class="md:w-8/12 w-full bg-white p-12 rounded-[2rem] shadow-lg relative overflow-hidden">
              <div class="absolute top-0 left-0 w-2 h-full bg-red-500"></div>
              <h2 class="text-xl font-bold mb-2 uppercase text-red-500 tracking-widest">Sinopsis</h2>
-             <h3 class="text-5xl font-extrabold mb-8 text-gray-900">Night Stalkers</h3>
+                   <h3 class="text-5xl font-extrabold mb-8 text-gray-900" style="font-family: 'TT Regard Demo', sans-serif;">
+                      <span class="text-red-600">Night</span> Stalkers
+                   </h3>
              <p class="text-gray-600 mb-8 leading-loose">
-               Ketika murid SMA di sebuah sekolah terpencil bernama Anita mendadak meninggal misterius, Askara dan teman-temannya mendapati serangkaian kejadian aneh mulai meghantui mereka. Mulai dari penampakan, mimpi-mimpi ganjil, hingga munculnya bunga mawar putih di jendela Askara. Saat sahabat mereka, Ifal, juga jatuh sakit dengan gejala serupa, mereka mencium kedahiran sosok misterius yang menghubungkan semua kejadian itu. Dihantui rasa takut, mereka menyelidiki kebenaran di balik kematian Anita.
+               Ketika murid SMA di sebuah sekolah terpencil bernama Anita mendadak meninggal misterius, Askara dan teman-temannya mendapati serangkaian kejadian aneh mulai menghantui mereka. Mulai dari penampakan, mimpi-mimpi ganjil, hingga munculnya bunga mawar putih di jendela Askara. Saat sahabat mereka, Ifal, juga jatuh sakit dengan gejala serupa, mereka mencium kehadiran sosok misterius yang menghubungkan semua kejadian itu. Dihantui rasa takut, mereka menyelidiki kebenaran di balik kematian Anita.
              </p>
           </div>
           <div class="md:w-4/12 w-full rounded-[1.25rem] shadow-inner overflow-hidden flex items-center justify-center bg-gray-100">
@@ -212,9 +216,11 @@ const submitComment = async () => {
           <div class="md:w-8/12 w-full bg-white p-12 rounded-[2rem] shadow-lg relative overflow-hidden">
              <div class="absolute top-0 right-0 w-2 h-full bg-red-500"></div>
              <h2 class="text-xl font-bold mb-2 uppercase text-red-500 tracking-widest text-right">Tentang</h2>
-             <h3 class="text-5xl font-extrabold mb-8 text-gray-900 text-right">Night Stalkers</h3>
+                   <h3 class="text-5xl font-extrabold mb-8 text-gray-900 text-right" style="font-family: 'TT Regard Demo', sans-serif;">
+                      <span class="text-red-600">Night</span> Stalkers
+                   </h3>
              <p class="text-gray-600 mb-8 leading-loose text-right">
-               NightStalkers di buat oleh Risya Farizi yang di tenagai oleh keinginannya untuk berkreasi
+               NightStalkers dibuat oleh Risya Farizi yang ditenagai oleh keinginannya untuk berkreasi
              </p>
             <div class="flex justify-end">
              </div>
@@ -230,7 +236,7 @@ const submitComment = async () => {
    <section class="max-w-5xl mx-auto px-6 lg:px-8 mb-12 bg-[#fbfbfb] rounded-[1rem] py-6">
       <div class="max-w-5xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 mb-8 md:mb-12 bg-[#fbfbfb] rounded-[1rem] py-4 md:py-6">
        <div class="text-center mb-16">
-          <h2 class="text-4xl font-extrabold mb-4">Koleksi <span class="text-neon-green">Kami</span></h2>
+          <h2 class="text-4xl font-extrabold mb-4">Koleksi <span class="text-blue-500">Kami</span></h2>
           <p class="text-gray-500 mt-2 text-lg">Temukan yang menarik bagimu</p>
        </div>
 
@@ -271,21 +277,21 @@ const submitComment = async () => {
           <h2 class="text-3xl font-bold">Testimoni</h2>
        </div>
        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div v-for="(img, idx) in testimonialImages" :key="idx" class="bg-neon-green p-10 rounded-[2rem] shadow-xl text-white relative mt-12 transition-transform hover:-translate-y-2">
-             <div class="w-24 h-24 bg-white rounded-full absolute -top-12 left-1/2 transform -translate-x-1/2 border-4 border-neon-green shadow-sm overflow-hidden flex items-center justify-center">
+          <div v-for="(img, idx) in testimonialImages" :key="idx" class="bg-white p-10 rounded-[2rem] shadow-xl text-gray-900 relative mt-12 transition-transform hover:-translate-y-2 border border-slate-100">
+             <div class="w-24 h-24 bg-white rounded-full absolute -top-12 left-1/2 transform -translate-x-1/2 border-4 border-slate-200 shadow-sm overflow-hidden flex items-center justify-center">
                 <img :src="img" alt="avatar" class="w-full h-full object-cover" />
              </div>
              <!-- Nama pemberi testimoni -->
-             <h3 class="mt-12 font-bold text-xl text-center text-black md:text-gray-800" style="color:#222;">
+             <h3 class="mt-12 font-bold text-xl text-center text-slate-900 md:text-slate-800">
                {{ idx === 0 ? 'Grace' : idx === 1 ? 'Rouf' : 'Zildan' }}
              </h3>
-             <p v-if="idx === 0" class="text-sm opacity-90 mt-4 text-center italic leading-relaxed text-black">
+             <p v-if="idx === 0" class="text-sm opacity-90 mt-4 text-center italic leading-relaxed text-slate-700">
                 "Novel NightStalkers benar-benar membawa pengalaman membaca yang berbeda. Ceritanya seru dan penuh kejutan!"
              </p>
-             <p v-else-if="idx === 1" class="text-sm opacity-90 mt-4 text-center italic leading-relaxed text-black">
+             <p v-else-if="idx === 1" class="text-sm opacity-90 mt-4 text-center italic leading-relaxed text-slate-700">
                 "Komik NightStalkers ilustrasinya keren banget, alur ceritanya juga mudah diikuti dan bikin penasaran. Highly recommended!"
              </p>
-             <p v-else class="text-sm opacity-90 mt-4 text-center italic leading-relaxed text-black">
+             <p v-else class="text-sm opacity-90 mt-4 text-center italic leading-relaxed text-slate-700">
                 "Saya suka banget dengan karakter-karakter di NightStalkers. Baik novel maupun komiknya, dua-duanya bikin nagih!"
              </p>
           </div>

@@ -15,8 +15,6 @@ onMounted(async () => {
     console.error('Failed to load products for shop', e)
   }
 })
-
-const getImageUrl = (url: string) => url || 'https://via.placeholder.com/300x200/00FF00/FFFFFF?text=Product'
 </script>
 
 <template>

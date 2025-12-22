@@ -4,6 +4,7 @@ import { onMounted, computed } from 'vue'
 import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
 import Toast from './components/Toast.vue'
+import CustomerService from './components/CustomerService.vue'
 
 const route = useRoute();
 
@@ -28,6 +29,7 @@ onMounted(() => {
     </main>
     <Footer v-if="showLayout" />
     <Toast />
+    <CustomerService />
   </div>
 </template>
 

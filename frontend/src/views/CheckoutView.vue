@@ -126,9 +126,9 @@ const handleCheckout = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#F3F3F3] text-black">
+  <div class="min-h-screen bg-white text-black">
     <div class="container mx-auto px-4 py-12">
-        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-neon-green inline-block pb-2">Checkout</h1>
+<h1 class="text-4xl font-extrabold mb-10 border-b-4 border-blue-500 inline-block pb-2">Checkout</h1>
 
         <!-- Step 1: Stock Validation Loading/Error -->
         <div v-if="step === 1" class="bg-white p-8 rounded-[2rem] shadow-lg max-w-2xl mx-auto text-center">
@@ -147,8 +147,8 @@ const handleCheckout = async () => {
                     </ul>
                 </div>
                 <div class="flex gap-4 justify-center">
-                    <router-link to="/cart" class="bg-gray-200 px-6 py-3 rounded-full font-bold">Kembali ke Keranjang</router-link>
-                    <button @click="checkStock" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-400 transition-colors">Coba Lagi</button>
+                    <router-link to="/cart" class="bg-slate-200 hover:bg-slate-300 px-6 py-3 rounded-full font-bold text-slate-800">Kembali ke Keranjang</router-link>
+                    <button @click="checkStock" class="bg-sky-600 text-white px-6 py-3 rounded-full font-bold hover:bg-sky-700 transition-colors">Coba Lagi</button>
                 </div>
             </div>
         </div>
@@ -164,32 +164,32 @@ const handleCheckout = async () => {
                  <form class="space-y-6" @submit.prevent="goToConfirmation">
                      <div class="grid grid-cols-2 gap-6">
                          <div>
-                             <label class="block text-sm font-bold mb-2 text-gray-500">Nama Depan <span class="text-red-500">*</span></label>
-                             <input v-model="form.firstName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                             <label class="block text-sm font-bold mb-2 text-gray-500">Nama Depan <span class="text-blue-500">*</span></label>
+                             <input v-model="form.firstName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
                          </div>
                          <div>
                              <label class="block text-sm font-bold mb-2 text-gray-500">Nama Belakang</label>
-                             <input v-model="form.lastName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors">
+                             <input v-model="form.lastName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors">
                          </div>
                      </div>
                      <div>
-                         <label class="block text-sm font-bold mb-2 text-gray-500">Email <span class="text-red-500">*</span></label>
-                         <input v-model="form.email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Email <span class="text-blue-500">*</span></label>
+                         <input v-model="form.email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
                      </div>
                      <div>
-                         <label class="block text-sm font-bold mb-2 text-gray-500">Alamat <span class="text-red-500">*</span></label>
-                         <input v-model="form.address" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Alamat <span class="text-blue-500">*</span></label>
+                         <input v-model="form.address" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
                      </div>
                      <div>
-                         <label class="block text-sm font-bold mb-2 text-gray-500">Provinsi <span class="text-red-500">*</span></label>
-                         <select v-model="form.province" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                         <label class="block text-sm font-bold mb-2 text-gray-500">Provinsi <span class="text-blue-500">*</span></label>
+                         <select v-model="form.province" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
                              <option value="">Pilih Provinsi</option>
                              <option v-for="prov in provinces" :key="prov" :value="prov">{{ prov }}</option>
                          </select>
                      </div>
                      <div v-if="form.province">
                          <label class="block text-sm font-bold mb-2 text-gray-500">Kota/Kabupaten <span class="text-red-500">*</span></label>
-                         <select v-model="form.city" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                         <select v-model="form.city" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
                              <option value="">Pilih Kota</option>
                              <option v-for="city in citiesForProvince" :key="city" :value="city">{{ city }}</option>
                          </select>
@@ -197,11 +197,11 @@ const handleCheckout = async () => {
                      <div class="grid grid-cols-2 gap-6">
                         <div>
                              <label class="block text-sm font-bold mb-2 text-gray-500">Kode Pos <span class="text-red-500">*</span></label>
-                             <input v-model="form.zipCode" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                             <input v-model="form.zipCode" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
                          </div>
                          <div>
                              <label class="block text-sm font-bold mb-2 text-gray-500">No. HP <span class="text-red-500">*</span></label>
-                             <input v-model="form.phone" type="tel" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-neon-green transition-colors" required>
+                             <input v-model="form.phone" type="tel" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
                          </div>
                      </div>
 
@@ -210,8 +210,8 @@ const handleCheckout = async () => {
 
                      <div class="pt-6 border-t border-gray-100">
                         <h3 class="text-xl font-bold mb-4">Metode Pembayaran</h3>
-                        <label class="flex items-center gap-3 p-4 border border-neon-green bg-green-50 rounded-xl cursor-pointer">
-                            <input type="radio" v-model="paymentMethod" value="COD" checked class="accent-neon-green w-5 h-5">
+                        <label class="flex items-center gap-3 p-4 border border-blue-400 bg-blue-50 rounded-xl cursor-pointer">
+                            <input type="radio" v-model="paymentMethod" value="COD" checked class="accent-blue-500 w-5 h-5">
                             <div>
                                 <span class="font-bold block">COD (Bayar di Tempat)</span>
                                 <span class="text-sm text-gray-500">Bayar di tempat saat kurir tiba.</span>
@@ -219,7 +219,7 @@ const handleCheckout = async () => {
                         </label>
                      </div>
 
-                     <button type="submit" class="w-full bg-red-600 text-white py-4 rounded-full font-bold hover:bg-red-400 transition-colors mt-6">
+                     <button type="submit" class="w-full bg-sky-600 text-white py-4 rounded-full font-bold hover:bg-sky-700 transition-colors mt-6">
                          Lanjut ke Konfirmasi
                      </button>
                  </form>
@@ -239,7 +239,7 @@ const handleCheckout = async () => {
                          <p class="text-sm">{{ form.address }}</p>
                          <p class="text-sm">{{ form.city }}, {{ form.province }} {{ form.zipCode }}</p>
                          <p class="text-sm">{{ form.phone }}</p>
-                         <button @click="step = 2" class="text-sm bg-red-600 text-white font-bold mt-2 px-3 py-1 rounded hover:bg-red-400 transition-colors">Ubah Data</button>
+                         <button @click="step = 2" class="text-sm bg-sky-600 text-white font-bold mt-2 px-3 py-1 rounded hover:bg-sky-700 transition-colors">Ubah Data</button>
                      </div>
 
                      <div class="bg-gray-50 p-4 rounded-xl">
@@ -248,7 +248,7 @@ const handleCheckout = async () => {
                     </div>
                  </div>
 
-                 <button @click="handleCheckout" class="w-full bg-red-600 text-white font-bold py-3 rounded-full hover:bg-red-400 transition-colors">
+                 <button @click="handleCheckout" class="w-full bg-sky-600 text-white font-bold py-3 rounded-full hover:bg-sky-700 transition-colors">
                     Konfirmasi & Proses Pesanan
                  </button>
              </div>
@@ -264,7 +264,7 @@ const handleCheckout = async () => {
                  </div>
                  <div class="flex justify-between border-t border-dashed border-gray-300 pt-6 text-xl">
                      <span class="font-bold">Total</span>
-                     <span class="font-extrabold text-neon-green">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
+                     <span class="font-extrabold text-blue-500">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                  </div>
              </div>
         </div>

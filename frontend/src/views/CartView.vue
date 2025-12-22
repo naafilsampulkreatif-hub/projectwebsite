@@ -48,9 +48,9 @@ const fmtPrice = (p: any) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#F3F3F3] text-black">
+  <div class="min-h-screen bg-white text-black">
     <div class="container mx-auto px-4 py-12">
-        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-neon-green inline-block pb-2">Keranjang Belanja</h1>
+        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-blue-500 inline-block pb-2">Keranjang Belanja</h1>
 
         <div v-if="cartStore.loading" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
             <p class="text-gray-500 mb-6 text-xl">Memuat keranjang...</p>
@@ -58,7 +58,7 @@ const fmtPrice = (p: any) => {
 
         <div v-else-if="cartStore.items.length === 0" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
             <p class="text-gray-500 mb-6 text-xl">Keranjang anda kosong.</p>
-            <router-link to="/shop" class="text-neon-green font-bold text-lg hover:underline uppercase tracking-widest">Lanjut Belanja ></router-link>
+            <router-link to="/shop" class="text-blue-500 font-bold text-lg hover:underline uppercase tracking-widest">Lanjut Belanja ></router-link>
         </div>
 
         <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -87,13 +87,13 @@ const fmtPrice = (p: any) => {
                                                         <td class="py-6 font-medium text-gray-600">RP {{ fmtPrice(item?.product?.price ?? item?.price) }}</td>
                                                         <td class="py-6 font-medium text-gray-600">
                                                             <div class="inline-flex items-center border rounded-full overflow-hidden">
-                                                                <button @click="decrease(item)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-400 transition-colors">-</button>
+                                                                <button @click="decrease(item)" class="px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded transition-colors">-</button>
                                                                 <div class="px-4">{{ item.quantity ?? 0 }}</div>
-                                                                <button @click="increase(item)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-400 transition-colors">+</button>
+                                                                <button @click="increase(item)" class="px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded transition-colors">+</button>
                                                             </div>
-                                                            <button @click="remove(item)" class="text-sm bg-red-600 text-white mt-2 px-3 py-1 rounded hover:bg-red-400 transition-colors">Hapus</button>
+                                                            <button @click="remove(item)" class="text-sm bg-red-500 hover:bg-red-600 text-white mt-2 px-3 py-1 rounded transition-colors">Hapus</button>
                                                         </td>
-                                                        <td class="py-6 font-extrabold text-neon-green text-lg">RP {{ fmtPrice((item?.product?.price ?? item?.price) * (item.quantity ?? 0)) }}</td>
+                                                        <td class="py-6 font-extrabold text-blue-500 text-lg">RP {{ fmtPrice((item?.product?.price ?? item?.price) * (item.quantity ?? 0)) }}</td>
                                                 </tr>
                                         </tbody>
                 </table>
@@ -108,10 +108,10 @@ const fmtPrice = (p: any) => {
                 </div>
                 <div class="flex justify-between mb-8 text-xl">
                     <span class="font-bold">Total:</span>
-                    <span class="font-extrabold text-neon-green">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
+                    <span class="font-extrabold text-blue-500">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                 </div>
 
-                <button @click="proceedToCheckout" class="w-full bg-red-600 text-white font-bold py-3 rounded-full hover:bg-red-400 transition-colors">
+                <button @click="proceedToCheckout" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-full transition-colors">
                     Checkout Sekarang
                 </button>
             </div>
