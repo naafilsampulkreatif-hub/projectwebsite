@@ -52,6 +52,12 @@ func main() {
 	hybridRouter.HandleFunc("/support/message", handlers.CreateSupportMessage).Methods("POST") // Send support message
 	hybridRouter.HandleFunc("/support/messages", handlers.GetSupportMessages).Methods("GET")   // Get support messages
 
+	// Protected Routes (Authenticated User)
+	userRouter := r.PathPrefix("/api").Subrouter()
+	userRouter.Use(middleware.AuthMiddleware)
+	userRouter.HandleFunc("/profile", handlers.GetUserProfile).Methods("GET")    // Get user profile
+	userRouter.HandleFunc("/profile", handlers.UpdateUserProfile).Methods("PUT") // Update user profile
+
 	// Protected Routes (Admin)
 	adminRouter := r.PathPrefix("/api/admin").Subrouter()
 	adminRouter.Use(middleware.AuthMiddleware)                                         // Must be logged in

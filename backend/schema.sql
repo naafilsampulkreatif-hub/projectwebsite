@@ -5,6 +5,12 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'customer') DEFAULT 'customer',
+    phone VARCHAR(20),
+    address TEXT,
+    province VARCHAR(100),
+    city VARCHAR(100),
+    postal_code VARCHAR(20),
+    profile_image VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

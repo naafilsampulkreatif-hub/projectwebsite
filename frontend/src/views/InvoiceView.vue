@@ -12,6 +12,10 @@ const items = ref<any[]>([]);
 
 const orderId = route.params.id as string;
 
+const printPDF = () => {
+  window.print();
+};
+
 onMounted(async () => {
     if (!orderId) {
         error.value = 'Order ID tidak ditemukan';
@@ -86,7 +90,7 @@ const getStatusLabel = (status: string) => {
             <div v-else-if="error" class="bg-white p-8 rounded-[2rem] shadow-lg max-w-2xl mx-auto">
                 <h2 class="text-2xl font-bold text-red-600 mb-4">Error</h2>
                 <p class="text-gray-700 mb-6">{{ error }}</p>
-                <router-link to="/cart" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-400 transition-colors">
+                <router-link to="/cart" class="inline-block text-white px-6 py-3 rounded-full font-bold transition-colors hover:opacity-80" style="background-color: #FF5555;">
                     Kembali ke Keranjang
                 </router-link>
             </div>
@@ -144,18 +148,21 @@ const getStatusLabel = (status: string) => {
                                 <span class="text-xs text-gray-400">x{{ item.quantity }}</span>
                             </div>
                             <div class="text-right">
-                                <span class="block text-sm text-gray-600">RP {{ item.price.toLocaleString() }}</span>
-                                <span class="font-bold">RP {{ (item.total).toLocaleString() }}</span>
+                                <span class="block text-sm text-black">RP {{ item.price.toLocaleString() }}</span>
+                                <span class="font-bold text-black">RP {{ (item.total).toLocaleString() }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex justify-between border-t border-dashed border-gray-300 pt-6 text-xl mb-8">
                         <span class="font-bold">Total</span>
-                        <span class="font-extrabold text-neon-green">RP {{ invoice.total_amount.toLocaleString() }}</span>
+                        <span class="font-extrabold text-black">RP {{ invoice.total_amount.toLocaleString() }}</span>
                     </div>
 
                     <div class="space-y-3">
+                        <button @click="printPDF" class="block w-full bg-btn-green text-white px-6 py-3 rounded-full font-bold hover:opacity-80 transition-opacity text-center">
+                            🖨️ Cetak PDF
+                        </button>
                         <router-link to="/" class="block w-full bg-gray-200 text-black px-6 py-3 rounded-full font-bold hover:bg-gray-300 transition-colors text-center">
                             Kembali ke Beranda
                         </router-link>
@@ -168,7 +175,7 @@ const getStatusLabel = (status: string) => {
 
             <div v-else class="bg-white p-8 rounded-[2rem] shadow-lg max-w-2xl mx-auto text-center">
                 <p class="text-gray-600 mb-6">Invoice tidak ditemukan</p>
-                <router-link to="/cart" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold hover:bg-red-400 transition-colors">
+                <router-link to="/cart" class="inline-block text-white px-6 py-3 rounded-full font-bold transition-colors hover:opacity-80" style="background-color: #FF5555;">
                     Kembali ke Keranjang
                 </router-link>
             </div>

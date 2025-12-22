@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useCartStore } from '../stores/cart';
+import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { useToastStore } from '../stores/toast';
 import api from '../services/api';
 import { getProvincesArray, getCitiesForProvince } from '../data/indonesianRegions';
 
 const cartStore = useCartStore();
+const authStore = useAuthStore();
 const router = useRouter();
 const toast = useToastStore();
 
@@ -71,6 +73,19 @@ onMounted(async () => {
         return;
     }
     provinces.value = getProvincesArray();
+    
+    // Auto-fill data dari user profile jika sudah login
+    if (authStore.isAuthenticated && authStore.user) {
+        form.value.firstName = authStore.user.name?.split(' ')[0] || '';
+        form.value.lastName = authStore.user.name?.split(' ').slice(1).join(' ') || '';
+        form.value.email = authStore.user.email || '';
+        form.value.phone = authStore.user.phone || '';
+        form.value.address = authStore.user.address || '';
+        form.value.province = authStore.user.province || '';
+        form.value.city = authStore.user.city || '';
+        form.value.zipCode = authStore.user.postal_code || '';
+    }
+    
     checkStock();
 });
 
@@ -127,17 +142,17 @@ const handleCheckout = async () => {
 
 <template>
   <div class="min-h-screen bg-white text-black">
-    <div class="container mx-auto px-4 py-12">
-<h1 class="text-4xl font-extrabold mb-10 border-b-4 border-blue-500 inline-block pb-2">Checkout</h1>
+    <div class="container mx-auto px-4 py-6 md:py-12">
+<h1 class="text-3xl md:text-4xl font-extrabold mb-6 md:mb-10 border-b-4 border-blue-500 inline-block pb-2">Checkout</h1>
 
         <!-- Step 1: Stock Validation Loading/Error -->
-        <div v-if="step === 1" class="bg-white p-8 rounded-[2rem] shadow-lg max-w-2xl mx-auto text-center">
+        <div v-if="step === 1" class="bg-white p-4 md:p-8 rounded-[2rem] shadow-lg max-w-2xl mx-auto text-center">
             <div v-if="stockLoading">
-                <p class="text-xl font-bold animate-pulse">Mengecek ketersediaan stok...</p>
+                <p class="text-lg font-bold animate-pulse">Mengecek ketersediaan stok...</p>
             </div>
             <div v-else-if="!stockValid">
-                <h2 class="text-2xl font-bold text-red-600 mb-4">Stok Tidak Mencukupi</h2>
-                <div class="bg-red-50 p-4 rounded-xl mb-6 text-left">
+                <h2 class="text-xl md:text-2xl font-bold text-red-600 mb-4">Stok Tidak Mencukupi</h2>
+                <div class="bg-red-50 p-3 md:p-4 rounded-xl mb-6 text-left text-sm md:text-base">
                     <p class="font-medium mb-2">Item berikut tidak tersedia dalam jumlah yang diminta:</p>
                     <ul class="list-disc list-inside space-y-1">
                         <li v-for="issue in stockIssues" :key="issue.product_name">
@@ -148,7 +163,7 @@ const handleCheckout = async () => {
                 </div>
                 <div class="flex gap-4 justify-center">
                     <router-link to="/cart" class="bg-slate-200 hover:bg-slate-300 px-6 py-3 rounded-full font-bold text-slate-800">Kembali ke Keranjang</router-link>
-                    <button @click="checkStock" class="bg-sky-600 text-white px-6 py-3 rounded-full font-bold hover:bg-sky-700 transition-colors">Coba Lagi</button>
+                    <button @click="checkStock" class="text-white px-6 py-3 rounded-full font-bold transition-colors hover:opacity-80" style="background-color: #547792;">Coba Lagi</button>
                 </div>
             </div>
         </div>
@@ -165,31 +180,31 @@ const handleCheckout = async () => {
                      <div class="grid grid-cols-2 gap-6">
                          <div>
                              <label class="block text-sm font-bold mb-2 text-gray-500">Nama Depan <span class="text-blue-500">*</span></label>
-                             <input v-model="form.firstName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
+                             <input v-model="form.firstName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors" required>
                          </div>
                          <div>
                              <label class="block text-sm font-bold mb-2 text-gray-500">Nama Belakang</label>
-                             <input v-model="form.lastName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors">
+                             <input v-model="form.lastName" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors">
                          </div>
                      </div>
                      <div>
                          <label class="block text-sm font-bold mb-2 text-gray-500">Email <span class="text-blue-500">*</span></label>
-                         <input v-model="form.email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
+                         <input v-model="form.email" type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors" required>
                      </div>
                      <div>
                          <label class="block text-sm font-bold mb-2 text-gray-500">Alamat <span class="text-blue-500">*</span></label>
-                         <input v-model="form.address" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
+                         <input v-model="form.address" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors" required>
                      </div>
                      <div>
                          <label class="block text-sm font-bold mb-2 text-gray-500">Provinsi <span class="text-blue-500">*</span></label>
-                         <select v-model="form.province" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
+                         <select v-model="form.province" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors" required>
                              <option value="">Pilih Provinsi</option>
                              <option v-for="prov in provinces" :key="prov" :value="prov">{{ prov }}</option>
                          </select>
                      </div>
                      <div v-if="form.province">
                          <label class="block text-sm font-bold mb-2 text-gray-500">Kota/Kabupaten <span class="text-red-500">*</span></label>
-                         <select v-model="form.city" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
+                         <select v-model="form.city" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors" required>
                              <option value="">Pilih Kota</option>
                              <option v-for="city in citiesForProvince" :key="city" :value="city">{{ city }}</option>
                          </select>
@@ -197,11 +212,11 @@ const handleCheckout = async () => {
                      <div class="grid grid-cols-2 gap-6">
                         <div>
                              <label class="block text-sm font-bold mb-2 text-gray-500">Kode Pos <span class="text-red-500">*</span></label>
-                             <input v-model="form.zipCode" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
+                             <input v-model="form.zipCode" type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors" required>
                          </div>
                          <div>
                              <label class="block text-sm font-bold mb-2 text-gray-500">No. HP <span class="text-red-500">*</span></label>
-                             <input v-model="form.phone" type="tel" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-400 transition-colors" required>
+                             <input v-model="form.phone" type="tel" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:outline-none focus:border-blue-400 transition-colors" required>
                          </div>
                      </div>
 
@@ -219,7 +234,7 @@ const handleCheckout = async () => {
                         </label>
                      </div>
 
-                     <button type="submit" class="w-full bg-sky-600 text-white py-4 rounded-full font-bold hover:bg-sky-700 transition-colors mt-6">
+                     <button type="submit" class="w-full text-white py-4 rounded-full font-bold transition-colors mt-6 hover:opacity-80" style="background-color: #547792;">
                          Lanjut ke Konfirmasi
                      </button>
                  </form>
@@ -239,7 +254,7 @@ const handleCheckout = async () => {
                          <p class="text-sm">{{ form.address }}</p>
                          <p class="text-sm">{{ form.city }}, {{ form.province }} {{ form.zipCode }}</p>
                          <p class="text-sm">{{ form.phone }}</p>
-                         <button @click="step = 2" class="text-sm bg-sky-600 text-white font-bold mt-2 px-3 py-1 rounded hover:bg-sky-700 transition-colors">Ubah Data</button>
+                         <button @click="step = 2" class="text-sm text-white font-bold mt-2 px-3 py-1 rounded transition-colors hover:opacity-80" style="background-color: #547792;">Ubah Data</button>
                      </div>
 
                      <div class="bg-gray-50 p-4 rounded-xl">
@@ -248,7 +263,7 @@ const handleCheckout = async () => {
                     </div>
                  </div>
 
-                 <button @click="handleCheckout" class="w-full bg-sky-600 text-white font-bold py-3 rounded-full hover:bg-sky-700 transition-colors">
+                 <button @click="handleCheckout" class="w-full text-white font-bold py-3 rounded-full transition-colors hover:opacity-80" style="background-color: #547792;">
                     Konfirmasi & Proses Pesanan
                  </button>
              </div>
@@ -259,12 +274,12 @@ const handleCheckout = async () => {
                  <div class="space-y-4 mb-8">
                      <div v-for="item in cartStore.items" :key="item.id" class="flex justify-between items-center py-2 border-b border-gray-50">
                          <span class="text-gray-700 font-medium">{{ item.product.name }} <span class="text-xs text-gray-400">x{{ item.quantity }}</span></span>
-                         <span class="font-bold">RP {{ (item.product.price * item.quantity).toLocaleString() }}</span>
+                         <span class="font-bold text-black">RP {{ (item.product.price * item.quantity).toLocaleString() }}</span>
                      </div>
                  </div>
                  <div class="flex justify-between border-t border-dashed border-gray-300 pt-6 text-xl">
                      <span class="font-bold">Total</span>
-                     <span class="font-extrabold text-blue-500">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
+                     <span class="font-extrabold text-black">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                  </div>
              </div>
         </div>

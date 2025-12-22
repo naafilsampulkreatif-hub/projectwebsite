@@ -73,7 +73,8 @@ function formatPrice(v: any) {
 
       <div class="mt-auto">
         <button :disabled="loading" @click="addToCart" aria-label="Add to cart" 
-          class="w-full bg-sky-500 text-white rounded-full font-bold py-2 px-4 mt-2 transition-colors duration-200 hover:bg-sky-600 disabled:opacity-60 disabled:cursor-not-allowed">
+          class="w-full text-white rounded-full font-bold py-2 px-4 mt-2 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-80" 
+          style="background-color: #547792;">
           <span v-if="loading">Menambahkan...</span>
           <span v-else>Tambah ke Keranjang</span>
         </button>

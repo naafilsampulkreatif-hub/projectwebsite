@@ -164,7 +164,7 @@ import { computed } from 'vue';
                   <p class="text-xs text-slate-500">{{ order.guest_info?.email }}</p>
                 </div>
               </td>
-              <td class="px-6 py-4 font-bold text-emerald-600">RP {{ order.total_amount?.toLocaleString() }}</td>
+              <td class="px-6 py-4 font-bold text-black">RP {{ order.total_amount?.toLocaleString() }}</td>
               <td class="px-6 py-4">
                 <select 
                   :value="order.status"
@@ -203,7 +203,7 @@ import { computed } from 'vue';
       </div>
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
         <p class="text-slate-600 text-sm font-bold mb-1">Total Penjualan</p>
-        <p class="text-2xl font-bold text-slate-800">RP {{ orders.reduce((sum, o) => sum + (o.total_amount || 0), 0).toLocaleString() }}</p>
+        <p class="text-2xl font-bold text-black">RP {{ orders.reduce((sum, o) => sum + (o.total_amount || 0), 0).toLocaleString() }}</p>
       </div>
     </div>
 
@@ -244,9 +244,9 @@ import { computed } from 'vue';
                 <div class="flex-1">
                   <p class="font-semibold text-slate-800">{{ item.product_name }}</p>
                   <p class="text-sm text-slate-600">Kuantitas: {{ item.quantity }}</p>
-                  <p class="text-sm text-slate-600">Harga: RP {{ item.price.toLocaleString() }} x {{ item.quantity }}</p>
+                  <p class="text-sm text-black">Harga: RP {{ item.price.toLocaleString() }} x {{ item.quantity }}</p>
                 </div>
-                <div class="font-bold text-sky-600">
+                <div class="font-bold text-black">
                   RP {{ (item.price * item.quantity).toLocaleString() }}
                 </div>
               </div>
@@ -257,7 +257,7 @@ import { computed } from 'vue';
           <div class="bg-slate-50 p-4 rounded-lg">
             <div class="flex justify-between items-center font-bold text-lg">
               <span class="text-slate-800">Total:</span>
-              <span class="text-sky-600">RP {{ selectedOrder.total_amount?.toLocaleString() }}</span>
+              <span class="text-black">RP {{ selectedOrder.total_amount?.toLocaleString() }}</span>
             </div>
           </div>
         </div>

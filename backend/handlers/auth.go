@@ -61,8 +61,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// Query the user by email
 	var user models.User
-	query := "SELECT id, name, email, password, role FROM users WHERE email = ?"
-	err := db.DB.QueryRow(query, req.Email).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role)
+	query := "SELECT id, name, email, password, role, phone, address, province, city, postal_code, profile_image FROM users WHERE email = ?"
+	err := db.DB.QueryRow(query, req.Email).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role, &user.Phone, &user.Address, &user.Province, &user.City, &user.PostalCode, &user.ProfileImage)
 
 	if err == sql.ErrNoRows { // If no user found
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)

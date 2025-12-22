@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
 import { computed } from 'vue'
 
 const authStore = useAuthStore()
 const cartStore = useCartStore()
+const route = useRoute()
 
 const totalItems = computed(() => cartStore.totalItems)
 </script>
@@ -39,20 +40,10 @@ const totalItems = computed(() => cartStore.totalItems)
 
         <!-- User Menu -->
         <div v-if="authStore.isAuthenticated" class="flex items-center space-x-4">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 to-sky-500 flex items-center justify-center text-white text-sm font-bold">
+          <!-- Profile Icon - Clickable -->
+          <RouterLink to="/profile" class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 to-sky-500 flex items-center justify-center text-white text-sm font-bold hover:shadow-lg transition-shadow">
             {{ authStore.user?.name?.charAt(0)?.toUpperCase() }}
-          </div>
-          <div class="relative group">
-            <button class="hover:text-sky-500 transition-colors p-2">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-              </svg>
-            </button>
-            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              <RouterLink to="/profile" class="block px-4 py-2 hover:bg-slate-50 text-slate-700 first:rounded-t-lg">Profil Saya</RouterLink>
-              <button @click="authStore.logout(); $router.push('/')" class="block w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 last:rounded-b-lg border-t border-slate-200">Logout</button>
-            </div>
-          </div>
+          </RouterLink>
         </div>
 
         <!-- Login/Register -->

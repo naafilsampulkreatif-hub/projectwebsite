@@ -126,7 +126,7 @@ const handleFileUpload = async (event: any) => {
   <div>
     <div class="flex justify-between items-center mb-10">
         <h1 class="text-3xl font-bold">Dashboard Produk</h1>
-        <button @click="openAdd" class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-full font-bold uppercase shadow-lg transition-all hover:-translate-y-1">
+        <button @click="openAdd" class="text-white px-6 py-3 rounded-full font-bold uppercase shadow-lg transition-all hover:-translate-y-1 hover:opacity-80" style="background-color: #547792;">
             + Tambah Produk
         </button>
     </div>
@@ -139,7 +139,7 @@ const handleFileUpload = async (event: any) => {
             <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl text-gray-500 flex items-center">
                 <span class="text-sm">Slug: <strong>{{ generateSlug(form.name) || 'product-name' }}</strong></span>
             </div>
-            <input v-model="form.price" type="number" step="100" placeholder="Harga (IDR)" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-blue-400" required>
+            <input v-model="form.price" type="number" step="100" placeholder="Harga (IDR)" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-blue-400 text-black" required>
             <input v-model="form.stock" type="number" placeholder="Stok" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-blue-400" required>
 
             <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus-within:border-blue-400">
@@ -156,7 +156,7 @@ const handleFileUpload = async (event: any) => {
 
             <div class="md:col-span-2 flex space-x-4 justify-end">
                 <button type="button" @click="resetForm" class="px-6 py-3 rounded-full font-bold text-gray-500 hover:bg-gray-100">Batal</button>
-                <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white px-8 py-3 rounded-full font-bold shadow-lg">Simpan</button>
+                <button type="submit" class="text-white px-8 py-3 rounded-full font-bold shadow-lg hover:opacity-80" style="background-color: #547792;">Simpan</button>
             </div>
         </form>
     </div>
@@ -177,11 +177,11 @@ const handleFileUpload = async (event: any) => {
                 <tr v-for="p in products" :key="p.id" class="hover:bg-gray-50 transition-colors">
                     <td class="p-6 text-gray-500">#{{ p.id }}</td>
                     <td class="p-6 font-bold text-gray-800">{{ p.name }}</td>
-                    <td class="p-6 text-blue-600 font-bold">RP {{ p.price.toLocaleString() }}</td>
+                    <td class="p-6 text-black font-bold">RP {{ p.price.toLocaleString() }}</td>
                     <td class="p-6 text-gray-600">{{ p.stock }}</td>
                     <td class="p-6 space-x-4">
-                        <button @click="openEdit(p)" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-full shadow transition-colors">Edit</button>
-                        <button @click="deleteProduct(p.id)" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full shadow transition-colors">Hapus</button>
+                        <button @click="openEdit(p)" class="text-white font-bold px-4 py-2 rounded-full shadow transition-colors hover:opacity-80" style="background-color: #8BAE66;">Edit</button>
+                        <button @click="deleteProduct(p.id)" class="text-white font-bold px-4 py-2 rounded-full shadow transition-colors hover:opacity-80" style="background-color: #FF5555;">Hapus</button>
                     </td>
                 </tr>
             </tbody>

@@ -4,12 +4,18 @@ import "time" // Import time package for timestamp fields
 
 // User struct represents a user in the system
 type User struct {
-	ID        int       `json:"id"`        // Unique identifier for the user
-	Name      string    `json:"name"`      // User's full name
-	Email     string    `json:"email"`     // User's email address
-	Password  string    `json:"password"`  // User's hashed password (should not be returned in JSON usually, but kept here for struct)
-	Role      string    `json:"role"`      // User's role (admin or customer)
-	CreatedAt time.Time `json:"created_at"` // Timestamp when the user was created
+	ID           int       `json:"id"`            // Unique identifier for the user
+	Name         string    `json:"name"`          // User's full name
+	Email        string    `json:"email"`         // User's email address
+	Password     string    `json:"password"`      // User's hashed password (should not be returned in JSON usually, but kept here for struct)
+	Role         string    `json:"role"`          // User's role (admin or customer)
+	Phone        string    `json:"phone"`         // User's phone number
+	Address      string    `json:"address"`       // User's address
+	Province     string    `json:"province"`      // User's province
+	City         string    `json:"city"`          // User's city
+	PostalCode   string    `json:"postal_code"`   // User's postal code
+	ProfileImage string    `json:"profile_image"` // User's profile image URL
+	CreatedAt    time.Time `json:"created_at"`    // Timestamp when the user was created
 }
 
 // LoginRequest struct for login payload

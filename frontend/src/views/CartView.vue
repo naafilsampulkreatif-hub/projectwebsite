@@ -49,15 +49,15 @@ const fmtPrice = (p: any) => {
 
 <template>
   <div class="min-h-screen bg-white text-black">
-    <div class="container mx-auto px-4 py-12">
-        <h1 class="text-4xl font-extrabold mb-10 border-b-4 border-blue-500 inline-block pb-2">Keranjang Belanja</h1>
+    <div class="container mx-auto px-4 py-6 md:py-12">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-6 md:mb-10 border-b-4 border-blue-500 inline-block pb-2">Keranjang Belanja</h1>
 
-        <div v-if="cartStore.loading" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
-            <p class="text-gray-500 mb-6 text-xl">Memuat keranjang...</p>
+        <div v-if="cartStore.loading" class="text-center py-12 md:py-20 bg-white rounded-[2rem] shadow-lg">
+            <p class="text-gray-500 mb-4 md:mb-6 text-lg">Memuat keranjang...</p>
         </div>
 
-        <div v-else-if="cartStore.items.length === 0" class="text-center py-20 bg-white rounded-[2rem] shadow-lg">
-            <p class="text-gray-500 mb-6 text-xl">Keranjang anda kosong.</p>
+        <div v-else-if="cartStore.items.length === 0" class="text-center py-12 md:py-20 bg-white rounded-[2rem] shadow-lg">
+            <p class="text-gray-500 mb-4 md:mb-6 text-lg">Keranjang anda kosong.</p>
             <router-link to="/shop" class="text-blue-500 font-bold text-lg hover:underline uppercase tracking-widest">Lanjut Belanja ></router-link>
         </div>
 
@@ -84,16 +84,16 @@ const fmtPrice = (p: any) => {
                                                                     <div class="text-sm text-gray-500">SKU: {{ item.product.id }}</div>
                                                                 </div>
                                                         </td>
-                                                        <td class="py-6 font-medium text-gray-600">RP {{ fmtPrice(item?.product?.price ?? item?.price) }}</td>
+                                                        <td class="py-6 font-medium text-black">RP {{ fmtPrice(item?.product?.price ?? item?.price) }}</td>
                                                         <td class="py-6 font-medium text-gray-600">
                                                             <div class="inline-flex items-center border rounded-full overflow-hidden">
-                                                                <button @click="decrease(item)" class="px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded transition-colors">-</button>
+                                                                <button @click="decrease(item)" class="px-3 py-1 text-white rounded transition-colors hover:opacity-80" style="background-color: #547792;">-</button>
                                                                 <div class="px-4">{{ item.quantity ?? 0 }}</div>
-                                                                <button @click="increase(item)" class="px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded transition-colors">+</button>
+                                                                <button @click="increase(item)" class="px-3 py-1 text-white rounded transition-colors hover:opacity-80" style="background-color: #547792;">+</button>
                                                             </div>
-                                                            <button @click="remove(item)" class="text-sm bg-red-500 hover:bg-red-600 text-white mt-2 px-3 py-1 rounded transition-colors">Hapus</button>
+                                                            <button @click="remove(item)" class="text-sm text-white mt-2 px-3 py-1 rounded transition-colors hover:opacity-80" style="background-color: #FF5555;">Hapus</button>
                                                         </td>
-                                                        <td class="py-6 font-extrabold text-blue-500 text-lg">RP {{ fmtPrice((item?.product?.price ?? item?.price) * (item.quantity ?? 0)) }}</td>
+                                                        <td class="py-6 font-extrabold text-black text-lg">RP {{ fmtPrice((item?.product?.price ?? item?.price) * (item.quantity ?? 0)) }}</td>
                                                 </tr>
                                         </tbody>
                 </table>
@@ -104,14 +104,14 @@ const fmtPrice = (p: any) => {
                 <h2 class="text-2xl font-bold mb-6">Total Belanja</h2>
                 <div class="flex justify-between mb-4 border-b border-gray-100 pb-4">
                     <span class="text-gray-500">Subtotal:</span>
-                    <span class="font-bold text-gray-800">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
+                    <span class="font-bold text-black">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                 </div>
                 <div class="flex justify-between mb-8 text-xl">
                     <span class="font-bold">Total:</span>
-                    <span class="font-extrabold text-blue-500">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
+                    <span class="font-extrabold text-black">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
                 </div>
 
-                <button @click="proceedToCheckout" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-full transition-colors">
+                <button @click="proceedToCheckout" class="w-full text-white font-bold py-3 rounded-full transition-colors hover:opacity-80" style="background-color: #547792;">
                     Checkout Sekarang
                 </button>
             </div>

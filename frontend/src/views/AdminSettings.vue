@@ -211,7 +211,8 @@ const changePassword = async () => {
           </div>
           <button
             @click="isEditingProfile = true"
-            class="bg-sky-500 text-white font-bold px-6 py-2 rounded-full hover:bg-sky-600"
+            class="text-white font-bold px-6 py-2 rounded-full hover:opacity-80"
+            style="background-color: #8BAE66;"
           >
             Edit Profil
           </button>
@@ -237,7 +238,8 @@ const changePassword = async () => {
           <div class="flex gap-2">
             <button
               @click="updateProfile"
-              class="flex-1 bg-emerald-500 text-white font-bold py-2 rounded hover:bg-emerald-600"
+              class="flex-1 text-white font-bold py-2 rounded hover:opacity-80"
+              style="background-color: #8BAE66;"
             >
               Simpan
             </button>
@@ -259,7 +261,8 @@ const changePassword = async () => {
         <div v-if="!isChangingPassword" class="text-center py-8">
           <button
             @click="isChangingPassword = true"
-            class="bg-red-600 text-white font-bold px-6 py-3 rounded-full hover:bg-red-400"
+            class="text-white font-bold px-6 py-3 rounded-full hover:opacity-80"
+            style="background-color: #FF5555;"
           >
             Mulai Ganti Password
           </button>
@@ -296,7 +299,8 @@ const changePassword = async () => {
           <div class="flex gap-2">
             <button
               @click="changePassword"
-              class="flex-1 bg-red-600 text-white font-bold py-2 rounded hover:bg-red-400"
+              class="flex-1 text-white font-bold py-2 rounded hover:opacity-80"
+              style="background-color: #FF5555;"
             >
               Ubah Password
             </button>

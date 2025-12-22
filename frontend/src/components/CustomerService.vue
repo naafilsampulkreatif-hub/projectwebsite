@@ -64,7 +64,8 @@ const sendMessage = async () => {
     <button 
       v-if="!isOpen" 
       @click="toggleChat"
-      class="bg-sky-500 hover:bg-sky-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 w-16 h-16 flex items-center justify-center"
+      class="text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 w-16 h-16 flex items-center justify-center hover:opacity-80"
+      style="background-color: #8BAE66;"
     >
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
@@ -110,12 +111,13 @@ const sendMessage = async () => {
             type="text"
             placeholder="Ketik pesan..."
             :disabled="loading"
-            class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:border-emerald-400 transition-colors disabled:opacity-50"
+            class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm text-black focus:outline-none focus:border-emerald-400 transition-colors disabled:opacity-50"
           />
           <button 
             type="submit"
             :disabled="!newMessage.trim() || loading"
-            class="bg-sky-500 hover:bg-sky-600 text-white rounded-lg px-3 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="text-white rounded-lg px-3 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+            style="background-color: #547792;"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>

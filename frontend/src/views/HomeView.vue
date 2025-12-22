@@ -128,13 +128,13 @@ const submitComment = async () => {
       <div class="bg-white pb-2">
          <div class="relative h-[320px] sm:h-[400px] md:h-[500px] w-full overflow-hidden">
             <img :src="heroImage" alt="Hero" class="absolute inset-0 w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-blue-500/40 to-black/20"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/10"></div>
             <div class="relative z-10 flex flex-col items-center justify-center h-full px-2">
                <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-white drop-shadow-lg tracking-tight text-center mb-4 animate-fade-in" style="font-family: 'TT Regard Demo', sans-serif;">
                   <span class="block">
                     <span class="text-red-600">Night</span><span>Stalkers</span>
                   </span>
-                  <span class="block text-lg md:text-2xl font-medium text-blue-500 mt-2 tracking-wide">Misteri | Thriller</span>
+                  <span class="block text-lg md:text-2xl font-medium text-white mt-2 tracking-wide">Misteri | Thriller</span>
                </h1>
                   <a href="https://www.webtoons.com/id/canvas/night-stalkers/list?title_no=1089184" target="_blank" rel="noopener" class="inline-block bg-red-600 text-white font-bold px-6 py-2 rounded-full shadow hover:bg-red-400 transition-colors text-base md:text-lg">Baca di Webtoon</a>
             </div>
@@ -315,7 +315,7 @@ const submitComment = async () => {
                   <textarea v-model="commentText" rows="4" placeholder="Tulis komentar Anda..." class="w-full bg-gray-50 border border-gray-200 p-2 sm:p-3 rounded-lg text-sm resize-y max-h-32 min-h-[48px] overflow-y-auto"></textarea>
                </div>
                <div class="flex flex-col sm:flex-row justify-end gap-2">
-                  <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-full font-bold hover:bg-red-400 transition-colors w-full sm:w-auto">Kirim Komentar</button>
+                  <button type="submit" class="text-white px-4 py-2 rounded-full font-bold transition-colors w-full sm:w-auto hover:opacity-80" style="background-color: #8BAE66;">Kirim Komentar</button>
                </div>
             </form>
 

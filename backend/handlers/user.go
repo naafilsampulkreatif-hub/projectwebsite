@@ -140,6 +140,25 @@ func GetAdminProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+// GetUserProfile returns user's profile info
+func GetUserProfile(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id")
+
+	query := "SELECT id, name, email, role, phone, address, province, city, postal_code, profile_image, created_at FROM users WHERE id = ?"
+	var user models.User
+	err := db.DB.QueryRow(query, userID).Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.Phone, &user.Address, &user.Province, &user.City, &user.PostalCode, &user.ProfileImage, &user.CreatedAt)
+	if err == sql.ErrNoRows {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
 // UpdateAdminProfile updates admin's name and email
 func UpdateAdminProfile(w http.ResponseWriter, r *http.Request) {
 	adminID := r.Context().Value("user_id")
@@ -155,6 +174,35 @@ func UpdateAdminProfile(w http.ResponseWriter, r *http.Request) {
 
 	query := "UPDATE users SET name = ?, email = ? WHERE id = ? AND role = 'admin'"
 	_, err := db.DB.Exec(query, req.Name, req.Email, adminID)
+	if err != nil {
+		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Profile updated"})
+}
+
+// UpdateUserProfile updates user's profile information
+func UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id")
+
+	var req struct {
+		Name       string `json:"name"`
+		Email      string `json:"email"`
+		Phone      string `json:"phone"`
+		Address    string `json:"address"`
+		Province   string `json:"province"`
+		City       string `json:"city"`
+		PostalCode string `json:"postal_code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	query := "UPDATE users SET name = ?, email = ?, phone = ?, address = ?, province = ?, city = ?, postal_code = ? WHERE id = ?"
+	_, err := db.DB.Exec(query, req.Name, req.Email, req.Phone, req.Address, req.Province, req.City, req.PostalCode, userID)
 	if err != nil {
 		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
 		return
