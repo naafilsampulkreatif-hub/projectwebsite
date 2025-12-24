@@ -22,7 +22,7 @@ const handleLogin = async () => {
       } else {
         router.push('/');
       }
-      return
+      return;
     }
     error.value = 'Email atau Password salah.';
   } catch (err) {

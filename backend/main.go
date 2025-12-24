@@ -31,11 +31,13 @@ func main() {
 	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
 	// Public Routes (Auth)
-	r.HandleFunc("/api/register", handlers.Register).Methods("POST")       // Register
-	r.HandleFunc("/api/login", handlers.Login).Methods("POST")             // Login
-	r.HandleFunc("/api/products", handlers.GetProducts).Methods("GET")     // List Products
-	r.HandleFunc("/api/products/{id}", handlers.GetProduct).Methods("GET") // Get Product
-	r.HandleFunc("/api/comments", handlers.GetComments).Methods("GET")     // Get approved comments
+	r.HandleFunc("/api/register", handlers.Register).Methods("POST")                               // Register
+	r.HandleFunc("/api/login", handlers.Login).Methods("POST")                                     // Login
+	r.HandleFunc("/api/products", handlers.GetProducts).Methods("GET")                             // List Products
+	r.HandleFunc("/api/products/{id}", handlers.GetProduct).Methods("GET")                         // Get Product
+	r.HandleFunc("/api/comments", handlers.GetComments).Methods("GET")                             // Get approved comments
+	r.HandleFunc("/api/shipping-methods", handlers.GetShippingMethods).Methods("GET")              // Get active shipping methods
+	r.HandleFunc("/api/shipping-methods/{id}/cost", handlers.GetShippingMethodCost).Methods("GET") // Get shipping method cost
 
 	// Hybrid Routes (User or Guest)
 	hybridRouter := r.PathPrefix("/api").Subrouter()
@@ -82,6 +84,10 @@ func main() {
 	adminRouter.HandleFunc("/comments/{id}/moderate", handlers.ModerateComment).Methods("POST")        // Moderate comment
 	adminRouter.HandleFunc("/comments/{id}", handlers.DeleteComment).Methods("DELETE")                 // Delete comment
 	adminRouter.HandleFunc("/comments/pending-count", handlers.GetPendingCommentsCount).Methods("GET") // Pending comments count
+	adminRouter.HandleFunc("/shipping-methods", handlers.AdminGetShippingMethods).Methods("GET")       // List all shipping methods
+	adminRouter.HandleFunc("/shipping-methods", handlers.CreateShippingMethod).Methods("POST")         // Create shipping method
+	adminRouter.HandleFunc("/shipping-methods/{id}", handlers.UpdateShippingMethod).Methods("PUT")     // Update shipping method
+	adminRouter.HandleFunc("/shipping-methods/{id}", handlers.DeleteShippingMethod).Methods("DELETE")  // Delete shipping method
 
 	// CORS Handler
 	c := cors.New(cors.Options{

@@ -39,7 +39,19 @@ const citiesForProvince = computed(() => {
     return form.value.province ? getCitiesForProvince(form.value.province) : [];
 });
 
+const selectedShippingCost = computed(() => {
+    const method = shippingMethods.value.find(m => m.id === selectedShippingMethod.value);
+    return method?.cost || 0;
+});
+
+const totalWithShipping = computed(() => {
+    return cartStore.totalPrice + selectedShippingCost.value;
+});
+
 const paymentMethod = ref('COD');
+const shippingMethods = ref<any[]>([]);
+const selectedShippingMethod = ref<number>(1);
+const loadingShipping = ref(true);
 
 // Validate Stock on Mount
 const checkStock = async () => {
@@ -86,6 +98,20 @@ onMounted(async () => {
         form.value.zipCode = authStore.user.postal_code || '';
     }
     
+    // Fetch shipping methods
+    try {
+        const res = await api.get('/shipping-methods');
+        shippingMethods.value = res.data || [];
+        if (shippingMethods.value.length > 0) {
+            selectedShippingMethod.value = shippingMethods.value[0].id;
+        }
+    } catch (e) {
+        console.error('Failed to load shipping methods:', e);
+        toast.show('Gagal memuat metode pengiriman', 'error');
+    } finally {
+        loadingShipping.value = false;
+    }
+    
     checkStock();
 });
 
@@ -105,7 +131,8 @@ const handleCheckout = async () => {
         province: form.value.province,
         city: form.value.city,
         postal_code: form.value.zipCode,
-        phone: form.value.phone
+        phone: form.value.phone,
+        shipping_method_id: selectedShippingMethod.value
     };
 
     try {
@@ -224,6 +251,27 @@ const handleCheckout = async () => {
                      <!-- Flowchart says: Form -> Validate -> Payment -> Confirm -->
 
                      <div class="pt-6 border-t border-gray-100">
+                        <h3 class="text-xl font-bold mb-4">Metode Pengiriman</h3>
+                        <div v-if="loadingShipping" class="text-center py-4">
+                            <p class="text-gray-500">Memuat metode pengiriman...</p>
+                        </div>
+                        <div v-else-if="shippingMethods.length === 0" class="text-center py-4">
+                            <p class="text-gray-500">Tidak ada metode pengiriman tersedia</p>
+                        </div>
+                        <div v-else class="space-y-3">
+                            <label v-for="method in shippingMethods" :key="method.id" class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                                   :class="selectedShippingMethod === method.id ? 'border-blue-400 bg-blue-50' : ''">
+                                <input type="radio" :value="method.id" v-model="selectedShippingMethod" class="accent-blue-500 w-5 h-5">
+                                <div class="flex-1">
+                                    <span class="font-bold block">{{ method.name }}</span>
+                                    <span class="text-sm text-gray-500 block">{{ method.description }}</span>
+                                    <span class="font-bold text-blue-600">RP {{ method.cost.toLocaleString() }}</span>
+                                </div>
+                            </label>
+                        </div>
+                     </div>
+
+                     <div class="pt-6 border-t border-gray-100">
                         <h3 class="text-xl font-bold mb-4">Metode Pembayaran</h3>
                         <label class="flex items-center gap-3 p-4 border border-blue-400 bg-blue-50 rounded-xl cursor-pointer">
                             <input type="radio" v-model="paymentMethod" value="COD" checked class="accent-blue-500 w-5 h-5">
@@ -258,6 +306,14 @@ const handleCheckout = async () => {
                      </div>
 
                      <div class="bg-gray-50 p-4 rounded-xl">
+                        <h3 class="font-bold text-gray-500 text-sm uppercase mb-2">Metode Pengiriman:</h3>
+                        <p class="font-bold">{{ shippingMethods.find(m => m.id === selectedShippingMethod)?.name }}</p>
+                        <p class="text-sm">{{ shippingMethods.find(m => m.id === selectedShippingMethod)?.description }}</p>
+                        <p class="font-bold text-blue-600">RP {{ selectedShippingCost.toLocaleString() }}</p>
+                        <button @click="step = 2" class="text-sm text-white font-bold mt-2 px-3 py-1 rounded transition-colors hover:opacity-80" style="background-color: #547792;">Ubah Metode</button>
+                    </div>
+
+                     <div class="bg-gray-50 p-4 rounded-xl">
                         <h3 class="font-bold text-gray-500 text-sm uppercase mb-2">Pembayaran:</h3>
                         <p class="font-bold">{{ paymentMethod }}</p>
                     </div>
@@ -277,9 +333,19 @@ const handleCheckout = async () => {
                          <span class="font-bold text-black">RP {{ (item.product.price * item.quantity).toLocaleString() }}</span>
                      </div>
                  </div>
+                 <div class="space-y-2 py-4 border-t border-dashed border-gray-300">
+                    <div class="flex justify-between">
+                        <span class="text-gray-700">Subtotal</span>
+                        <span class="font-bold text-black">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-700">Pengiriman</span>
+                        <span class="font-bold text-blue-600">RP {{ selectedShippingCost.toLocaleString() }}</span>
+                    </div>
+                 </div>
                  <div class="flex justify-between border-t border-dashed border-gray-300 pt-6 text-xl">
                      <span class="font-bold">Total</span>
-                     <span class="font-extrabold text-black">RP {{ cartStore.totalPrice.toLocaleString() }}</span>
+                     <span class="font-extrabold text-black">RP {{ totalWithShipping.toLocaleString() }}</span>
                  </div>
              </div>
         </div>

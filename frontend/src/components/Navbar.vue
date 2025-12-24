@@ -12,7 +12,7 @@ const totalItems = computed(() => cartStore.totalItems)
 </script>
 
 <template>
-  <nav class="bg-white text-slate-800 p-4 shadow-sm border-b border-slate-200 sticky top-0 z-50">
+  <nav class="bg-white text-slate-800 p-4 shadow-sm border-b border-slate-200 sticky top-0 z-50 print:hidden">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-3">
         <RouterLink to="/" class="flex items-center space-x-3 group">

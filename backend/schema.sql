@@ -42,10 +42,12 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INT NULL, -- Nullable for guests
     session_id VARCHAR(255), -- For guest tracking
     guest_info JSON, -- Store guest name, email, address
+    shipping_method_id INT DEFAULT 1,
     total_amount DECIMAL(10, 2) NOT NULL,
     status ENUM('pending', 'paid', 'shipped', 'cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (shipping_method_id) REFERENCES shipping_methods(id) ON DELETE SET DEFAULT
 );
 
 -- Create Order Items Table
@@ -119,14 +121,17 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (moderated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Create Support Messages Table
-CREATE TABLE IF NOT EXISTS support_messages (
+-- Create Shipping Methods Table
+CREATE TABLE IF NOT EXISTS shipping_methods (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    session_id VARCHAR(255),
-    message TEXT NOT NULL,
-    type ENUM('user', 'support') DEFAULT 'user',
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    cost DECIMAL(10, 2) NOT NULL,
+    is_active BOOLEAN DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Insert default shipping method
+INSERT IGNORE INTO shipping_methods (id, name, description, cost) VALUES (1, 'COD (Bayar di Tempat)', 'Pembayaran saat pesanan tiba', 50000);
 

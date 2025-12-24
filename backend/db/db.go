@@ -123,6 +123,77 @@ func InitDB() {
 
 	// Ensure demo products exist
 	ensureDemoProducts()
+
+	// Ensure shipping_methods table and default COD method exist
+	ensureShippingMethods()
+}
+
+// ensureShippingMethods creates the shipping_methods table and default COD method if needed
+func ensureShippingMethods() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("PANIC in ensureShippingMethods:", r)
+		}
+	}()
+
+	// Create table if not exists
+	createTableQuery := `CREATE TABLE IF NOT EXISTS shipping_methods (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		name VARCHAR(100) NOT NULL,
+		description TEXT,
+		cost DECIMAL(10, 2) NOT NULL,
+		is_active BOOLEAN DEFAULT 1,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+	)`
+
+	_, err := DB.Exec(createTableQuery)
+	if err != nil {
+		log.Println("Warning: could not create shipping_methods table:", err)
+		return
+	}
+	log.Println("Shipping methods table ready")
+
+	// Ensure shipping_method_id column exists in orders table
+	var colCount int
+	q := `SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = (SELECT DATABASE()) AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'shipping_method_id'`
+	err = DB.QueryRow(q).Scan(&colCount)
+	if err != nil {
+		log.Println("Warning: could not verify shipping_method_id column:", err)
+		return
+	}
+	if colCount == 0 {
+		_, err = DB.Exec("ALTER TABLE orders ADD COLUMN shipping_method_id INT DEFAULT 1")
+		if err != nil {
+			log.Println("Warning: could not add shipping_method_id column to orders:", err)
+			return
+		}
+		// Also add foreign key
+		_, _ = DB.Exec("ALTER TABLE orders ADD FOREIGN KEY (shipping_method_id) REFERENCES shipping_methods(id) ON DELETE SET DEFAULT")
+		log.Println("Added shipping_method_id column and FK to orders table")
+	} else {
+		log.Println("shipping_method_id column already exists")
+	}
+
+	// Insert default COD method if no methods exist
+	var count int
+	err = DB.QueryRow("SELECT COUNT(*) FROM shipping_methods").Scan(&count)
+	if err != nil {
+		log.Println("Warning: could not count shipping methods:", err)
+		return
+	}
+
+	if count == 0 {
+		_, err = DB.Exec(`INSERT INTO shipping_methods (id, name, description, cost, is_active) 
+		                  VALUES (1, 'COD (Bayar di Tempat)', 'Pembayaran saat pesanan tiba', 50000, 1)`)
+		if err != nil {
+			log.Println("Warning: could not insert default COD method:", err)
+		} else {
+			log.Println("Default COD shipping method created")
+		}
+	} else {
+		log.Printf("Shipping methods table has %d entries\n", count)
+	}
 }
 
 // ensureDemoProducts adds demo products if none exist
@@ -153,4 +224,5 @@ func ensureDemoProducts() {
 		}
 	} else {
 		log.Printf("Products table already has %d products\n", count)
-	}}
+	}
+}

@@ -25,7 +25,7 @@ const comments = ref<any[]>([])
 // Images for placeholders (change these URLs to real uploads or assets)
 // Use banner.png placed in `frontend/public/banner.png` (served at `/banner.png`)
 const heroImage = ref('/banner.png')
-const synopsisImage = ref('/sipnosis.png')
+const synopsisImage = ref('/sinopsis.png')
 const aboutImage = ref('/tentang.png')
 const testimonialImages = ref<string[]>([
    'Grace.jpg',
@@ -315,7 +315,8 @@ const submitComment = async () => {
                   <textarea v-model="commentText" rows="4" placeholder="Tulis komentar Anda..." class="w-full bg-gray-50 border border-gray-200 p-2 sm:p-3 rounded-lg text-sm resize-y max-h-32 min-h-[48px] overflow-y-auto"></textarea>
                </div>
                <div class="flex flex-col sm:flex-row justify-end gap-2">
-                  <button type="submit" class="text-white px-4 py-2 rounded-full font-bold transition-colors w-full sm:w-auto hover:opacity-80" style="background-color: #8BAE66;">Kirim Komentar</button>
+                  <button type="submit" class="text-black px-4 py-2 rounded-full font-bold transition-colors w-full sm:w-auto hover:bg-gray-200 hover:opacity-80 bg-transparent border border-gray-300">Kirim Komentar</button>
+                  <button type="button" class="text-emerald-700 underline font-bold px-4 py-2 rounded-full transition-colors w-full sm:w-auto hover:text-emerald-900" @click="window.open('mailto:admin@nightstalkers.com','_blank')">Chat Admin</button>
                </div>
             </form>
 

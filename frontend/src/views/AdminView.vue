@@ -37,6 +37,12 @@ const router = useRouter();
 								<span class="ml-1">Pengaturan</span>
 							</router-link>
 						</li>
+						<li>
+							<router-link to="/admin/pengiriman" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-400/20 hover:text-red-700 transition-all transform hover:translate-x-2" active-class="bg-red-600/20 text-red-700">
+								<span class="w-2 h-2 bg-transparent rounded-full"></span>
+								<span class="ml-1">Metode Pengiriman</span>
+							</router-link>
+						</li>
 					</ul>
 				</nav>
 				<div class="mt-auto">

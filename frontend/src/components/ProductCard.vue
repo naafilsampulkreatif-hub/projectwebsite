@@ -42,6 +42,10 @@ function formatImageUrl(url: string) {
   if (!url) return url;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   if (url.startsWith('/')) return url;
+  // If URL contains 'uploads', ensure it starts with /
+  if (url.includes('uploads')) {
+    return url.startsWith('/') ? url : '/' + url;
+  }
   return '/' + url;
 }
 
@@ -60,6 +64,7 @@ function formatPrice(v: any) {
         :src="(product.image_url && formatImageUrl(product.image_url)) || 'https://via.placeholder.com/400x533?text=Product'"
         :alt="product.name"
         class="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-300"
+        @error="console.log('Image failed to load:', product.image_url)"
       />
     </div>
 
@@ -68,7 +73,7 @@ function formatPrice(v: any) {
       <div class="mb-3">
         <div class="text-xs text-gray-400 mb-1">{{ product.category || 'Kategori' }}</div>
         <h3 class="text-lg text-gray-900 font-semibold mb-2 line-clamp-2">{{ product.name }}</h3>
-        <div class="text-red-600 font-extrabold text-lg">RP {{ formatPrice(product.price) }}</div>
+        <div class="text-black font-extrabold text-lg">RP {{ formatPrice(product.price) }}</div>
       </div>
 
       <div class="mt-auto">

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useToastStore } from '../stores/toast';
 import api from '../services/api';
+
+import { getProvincesArray, getCitiesForProvince } from '../data/indonesianRegions';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -13,8 +15,7 @@ const user = ref<any>(null);
 const orders = ref<any[]>([]);
 const loading = ref(true);
 const isEditing = ref(false);
-const profilePhotoFile = ref<File | null>(null);
-const profilePhotoPreview = ref<string>('');
+
 const editForm = ref({
   name: '',
   email: '',
@@ -22,7 +23,13 @@ const editForm = ref({
   address: '',
   province: '',
   city: '',
-  postal_code: ''
+  postal_code: '',
+  profile_image: ''
+});
+
+const provinces = ref<string[]>(getProvincesArray());
+const citiesForProvince = computed(() => {
+  return editForm.value.province ? getCitiesForProvince(editForm.value.province) : [];
 });
 
 onMounted(async () => {
@@ -39,7 +46,8 @@ onMounted(async () => {
     address: authStore.user?.address || '',
     province: authStore.user?.province || '',
     city: authStore.user?.city || '',
-    postal_code: authStore.user?.postal_code || ''
+    postal_code: authStore.user?.postal_code || '',
+    profile_image: authStore.user?.profile_image || ''
   };
 
   await fetchOrders();
@@ -70,41 +78,12 @@ const handleUpdateProfile = async () => {
     authStore.user = { ...authStore.user, ...editForm.value };
     localStorage.setItem('user', JSON.stringify(authStore.user));
     isEditing.value = false;
-    profilePhotoFile.value = null;
-    profilePhotoPreview.value = '';
     toast.show('Profil berhasil diperbarui', 'success');
   } catch (error: any) {
     toast.show(error.response?.data?.message || 'Gagal memperbarui profil', 'error');
   }
 };
 
-const handlePhotoSelect = (e: Event) => {
-  const input = e.target as HTMLInputElement;
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    if (!file.type.startsWith('image/')) {
-      toast.show('File harus berupa gambar', 'error');
-      return;
-    }
-    profilePhotoFile.value = file;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      profilePhotoPreview.value = event.target?.result as string;
-      user.value.profile_image = profilePhotoPreview.value;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
 
 const getStatusLabel = (status: string) => {
   switch (status) {
@@ -147,22 +126,9 @@ const getStatusColor = (status: string) => {
         <div class="bg-white rounded-2xl shadow-sm p-4 md:p-8 border border-slate-100">
           <div class="text-center mb-4 md:mb-8">
             <div class="relative inline-block mb-4">
-              <div v-if="profilePhotoPreview" class="w-24 h-24 rounded-full overflow-hidden mx-auto flex items-center justify-center bg-gray-200">
-                <img :src="profilePhotoPreview" alt="Profile" class="w-full h-full object-cover">
-              </div>
-              <div v-else-if="user?.profile_image" class="w-24 h-24 rounded-full overflow-hidden mx-auto flex items-center justify-center bg-gray-200">
-                <img :src="user.profile_image" alt="Profile" class="w-full h-full object-cover">
-              </div>
-              <div v-else class="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-300 to-emerald-500 mx-auto flex items-center justify-center">
+              <div class="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-300 to-emerald-500 mx-auto flex items-center justify-center">
                 <span class="text-white text-3xl font-bold">{{ user?.name?.charAt(0)?.toUpperCase() }}</span>
               </div>
-              <input v-if="isEditing" type="file" accept="image/*" @change="handlePhotoSelect" class="hidden" id="profilePhotoInput">
-              <label v-if="isEditing" for="profilePhotoInput" class="absolute bottom-0 right-0 bg-emerald-500 text-white rounded-full p-2 cursor-pointer hover:bg-emerald-600 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-              </label>
             </div>
             <h2 class="text-xl md:text-2xl font-bold text-slate-800">{{ user?.name }}</h2>
             <p class="text-sm md:text-base text-slate-500">{{ user?.email }}</p>
@@ -207,11 +173,17 @@ const getStatusColor = (status: string) => {
             </div>
             <div>
               <label class="block text-xs md:text-sm font-bold text-slate-600 mb-1">Provinsi</label>
-              <input v-model="editForm.province" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 md:p-3 text-sm focus:outline-none focus:border-emerald-400 transition-colors text-black">
+              <select v-model="editForm.province" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 md:p-3 text-sm focus:outline-none focus:border-emerald-400 transition-colors text-black">
+                <option value="">Pilih Provinsi</option>
+                <option v-for="prov in provinces" :key="prov" :value="prov">{{ prov }}</option>
+              </select>
             </div>
-            <div>
-              <label class="block text-xs md:text-sm font-bold text-slate-600 mb-1">Kota</label>
-              <input v-model="editForm.city" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 md:p-3 text-sm focus:outline-none focus:border-emerald-400 transition-colors text-black">
+            <div v-if="editForm.province">
+              <label class="block text-xs md:text-sm font-bold text-slate-600 mb-1">Kota/Kabupaten</label>
+              <select v-model="editForm.city" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 md:p-3 text-sm focus:outline-none focus:border-emerald-400 transition-colors text-black">
+                <option value="">Pilih Kota</option>
+                <option v-for="city in citiesForProvince" :key="city" :value="city">{{ city }}</option>
+              </select>
             </div>
             <div>
               <label class="block text-xs md:text-sm font-bold text-slate-600 mb-1">Kode Pos</label>

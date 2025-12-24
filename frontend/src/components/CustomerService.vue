@@ -13,11 +13,21 @@ const unreadCount = ref(0);
 
 const canSendMessage = computed(() => authStore.isAuthenticated);
 
+const fetchMessages = async () => {
+  try {
+    const response = await api.get('/support/messages');
+    messages.value = response.data || [];
+  } catch (error) {
+    console.error('Failed to fetch messages:', error);
+  }
+};
+
 const toggleChat = async () => {
   if (!canSendMessage.value) return;
   isOpen.value = !isOpen.value;
   if (isOpen.value) {
     unreadCount.value = 0;
+    await fetchMessages();
   }
 };
 
@@ -26,31 +36,13 @@ const sendMessage = async () => {
 
   loading.value = true;
   try {
-    const response = await api.post('/support/message', {
+    await api.post('/support/message', {
       message: newMessage.value.trim(),
       type: 'user'
     });
-    
-    if (response.data) {
-      messages.value.push({
-        id: Date.now(),
-        message: newMessage.value.trim(),
-        type: 'user',
-        created_at: new Date().toISOString()
-      });
-      newMessage.value = '';
-
-      // Simulate support response (in real app, this would be WebSocket or polling)
-      setTimeout(() => {
-        messages.value.push({
-          id: Date.now() + 1,
-          message: 'Terima kasih telah menghubungi kami. Tim support akan membalas Anda segera.',
-          type: 'support',
-          created_at: new Date().toISOString()
-        });
-      }, 1000);
-    }
-  } catch (error: any) {
+    newMessage.value = '';
+    await fetchMessages();
+  } catch (error) {
     console.error('Failed to send message:', error);
   } finally {
     loading.value = false;

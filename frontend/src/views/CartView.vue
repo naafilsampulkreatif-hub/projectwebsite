@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useCartStore } from '../stores/cart';
 import { useRouter } from 'vue-router';
 
@@ -45,6 +45,17 @@ const fmtPrice = (p: any) => {
     if (isNaN(n)) return '0';
     return n.toLocaleString();
 };
+
+// Filter unique items by product id
+const uniqueCartItems = computed(() => {
+    const seen = new Set();
+    return cartStore.items.filter(item => {
+        const pid = item.product?.id || item.product_id || item.id;
+        if (seen.has(pid)) return false;
+        seen.add(pid);
+        return true;
+    });
+});
 </script>
 
 <template>
@@ -74,7 +85,7 @@ const fmtPrice = (p: any) => {
                         </tr>
                     </thead>
                                         <tbody class="divide-y divide-gray-100">
-                                                <tr v-for="item in cartStore.items" :key="item.id">
+                                                <tr v-for="item in uniqueCartItems" :key="item.id">
                                                         <td class="py-6 flex items-center space-x-6">
                                                                 <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
                                                                      <img :src="(item?.product?.image_url) || 'https://via.placeholder.com/150'" class="w-full h-full object-cover">

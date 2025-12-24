@@ -61,15 +61,42 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// Query the user by email
 	var user models.User
+	var profileImage sql.NullString                               // Handle potential NULL
+	var phone, address, province, city, postalCode sql.NullString // Handle potential NULLs
+
 	query := "SELECT id, name, email, password, role, phone, address, province, city, postal_code, profile_image FROM users WHERE email = ?"
-	err := db.DB.QueryRow(query, req.Email).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role, &user.Phone, &user.Address, &user.Province, &user.City, &user.PostalCode, &user.ProfileImage)
+	err := db.DB.QueryRow(query, req.Email).Scan(
+		&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
+		&phone, &address, &province, &city, &postalCode, &profileImage,
+	)
 
 	if err == sql.ErrNoRows { // If no user found
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	} else if err != nil { // Other DB error
+		log.Printf("Login database error for email=%s: %v", req.Email, err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
+	}
+
+	// Convert NULL fields to empty strings
+	if phone.Valid {
+		user.Phone = phone.String
+	}
+	if address.Valid {
+		user.Address = address.String
+	}
+	if province.Valid {
+		user.Province = province.String
+	}
+	if city.Valid {
+		user.City = city.String
+	}
+	if postalCode.Valid {
+		user.PostalCode = postalCode.String
+	}
+	if profileImage.Valid {
+		user.ProfileImage = profileImage.String
 	}
 
 	// Compare the stored hashed password with the provided password

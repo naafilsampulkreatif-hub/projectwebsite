@@ -150,12 +150,21 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Create Order
 	var res sql.Result
+
+	// Extract shipping_method_id from guest_info if provided
+	shippingMethodID := 1 // Default to COD
+	if shippingVal, exists := req.GuestInfo["shipping_method_id"]; exists {
+		if methodID, ok := shippingVal.(float64); ok {
+			shippingMethodID = int(methodID)
+		}
+	}
+
 	if userID != nil {
-		res, err = tx.Exec("INSERT INTO orders (user_id, total_amount, status) VALUES (?, ?, ?)", *userID, totalAmount, "pending")
+		res, err = tx.Exec("INSERT INTO orders (user_id, total_amount, status, shipping_method_id) VALUES (?, ?, ?, ?)", *userID, totalAmount, "pending", shippingMethodID)
 	} else {
 		// For guests: create order with session_id, guest_info (JSON) and total_amount
 		guestInfoJSON, _ := json.Marshal(req.GuestInfo)
-		res, err = tx.Exec("INSERT INTO orders (session_id, guest_info, total_amount, status) VALUES (?, ?, ?, ?)", sessionID, string(guestInfoJSON), totalAmount, "pending")
+		res, err = tx.Exec("INSERT INTO orders (session_id, guest_info, total_amount, status, shipping_method_id) VALUES (?, ?, ?, ?, ?)", sessionID, string(guestInfoJSON), totalAmount, "pending", shippingMethodID)
 	}
 
 	if err != nil {
@@ -257,16 +266,20 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 	orderID := vars["id"]
 	userID, sessionID := getIdentity(r)
 
-	// Fetch Order
+	// Fetch Order with shipping method info
 	var o models.Order
 	var guestInfoJSON []byte
 	var uid sql.NullInt64
 	var sid sql.NullString
+	var shippingCost float64
 
-	query := `SELECT id, user_id, session_id, total_amount, status, guest_info, created_at
-	          FROM orders WHERE id = ?`
+	query := `SELECT o.id, o.user_id, o.session_id, o.total_amount, o.status, o.guest_info, o.created_at, 
+	                 COALESCE(sm.cost, 0) as shipping_cost
+	          FROM orders o
+	          LEFT JOIN shipping_methods sm ON o.shipping_method_id = sm.id
+	          WHERE o.id = ?`
 
-	err := db.DB.QueryRow(query, orderID).Scan(&o.ID, &uid, &sid, &o.TotalAmount, &o.Status, &guestInfoJSON, &o.CreatedAt)
+	err := db.DB.QueryRow(query, orderID).Scan(&o.ID, &uid, &sid, &o.TotalAmount, &o.Status, &guestInfoJSON, &o.CreatedAt, &shippingCost)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			writeJSONError(w, http.StatusNotFound, "Order not found")
@@ -330,8 +343,9 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"order": o,
-		"items": invoiceItems,
+		"order":         o,
+		"items":         invoiceItems,
+		"shipping_cost": shippingCost,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

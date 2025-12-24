@@ -11,6 +11,7 @@ import AdminProducts from '../views/AdminProducts.vue'
 import AdminOrders from '../views/AdminOrders.vue'
 import AdminUsers from '../views/AdminUsers.vue'
 import AdminSettings from '../views/AdminSettings.vue'
+import AdminShippingMethods from '../views/AdminShippingMethods.vue'
 import OrdersView from '../views/OrdersView.vue'
 import ShopView from '../views/ShopView.vue'
 import UnderConstruction from '../views/UnderConstruction.vue'
@@ -75,7 +76,8 @@ const router = createRouter({
         { path: 'produk', name: 'admin-produk', component: AdminProducts },
         { path: 'pesanan', name: 'admin-pesanan', component: AdminOrders },
         { path: 'pengguna', name: 'admin-pengguna', component: AdminUsers },
-        { path: 'pengaturan', name: 'admin-pengaturan', component: AdminSettings }
+        { path: 'pengaturan', name: 'admin-pengaturan', component: AdminSettings },
+        { path: 'pengiriman', name: 'admin-pengiriman', component: AdminShippingMethods }
       ]
     },
     {

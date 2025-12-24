@@ -1,5 +1,5 @@
 <template>
-  <footer class="bg-dark-blue text-white py-12 mt-auto">
+  <footer class="bg-dark-blue text-white py-12 mt-auto print:hidden">
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-6">
       <div>
         <h3 class="font-bold text-xl mb-6">Kunjungi</h3>

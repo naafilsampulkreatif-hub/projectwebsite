@@ -3,6 +3,7 @@ package middleware // Package middleware
 import (
 	"context"                 // Context package
 	"ecommerce-backend/utils" // Utils for JWT
+	"encoding/json"           // JSON encoding
 	"net/http"                // HTTP package
 	"strings"                 // String manipulation
 )
@@ -10,17 +11,21 @@ import (
 // AuthMiddleware checks for a valid JWT token (Strict)
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		// Get the Authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" { // If missing
-			http.Error(w, "Authorization header required", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Authorization header required"})
 			return
 		}
 
 		// Check if it starts with "Bearer "
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "Invalid authorization format", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid authorization format"})
 			return
 		}
 
@@ -28,7 +33,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		tokenString := parts[1]
 		claims, err := utils.ValidateToken(tokenString)
 		if err != nil { // If invalid
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token"})
 			return
 		}
 
@@ -71,10 +77,13 @@ func OptionalAuthMiddleware(next http.Handler) http.Handler {
 // AdminMiddleware checks if the user has admin role
 func AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		// Get role from context (set by AuthMiddleware)
 		role, ok := r.Context().Value("role").(string)
 		if !ok || role != "admin" { // If not admin
-			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Forbidden: Admin access required"})
 			return
 		}
 

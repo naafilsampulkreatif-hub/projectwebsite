@@ -188,23 +188,24 @@ func UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id")
 
 	var req struct {
-		Name       string `json:"name"`
-		Email      string `json:"email"`
-		Phone      string `json:"phone"`
-		Address    string `json:"address"`
-		Province   string `json:"province"`
-		City       string `json:"city"`
-		PostalCode string `json:"postal_code"`
+		Name         string `json:"name"`
+		Email        string `json:"email"`
+		Phone        string `json:"phone"`
+		Address      string `json:"address"`
+		Province     string `json:"province"`
+		City         string `json:"city"`
+		PostalCode   string `json:"postal_code"`
+		ProfileImage string `json:"profile_image"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	query := "UPDATE users SET name = ?, email = ?, phone = ?, address = ?, province = ?, city = ?, postal_code = ? WHERE id = ?"
-	_, err := db.DB.Exec(query, req.Name, req.Email, req.Phone, req.Address, req.Province, req.City, req.PostalCode, userID)
+	query := "UPDATE users SET name = ?, email = ?, phone = ?, address = ?, province = ?, city = ?, postal_code = ?, profile_image = ? WHERE id = ?"
+	_, err := db.DB.Exec(query, req.Name, req.Email, req.Phone, req.Address, req.Province, req.City, req.PostalCode, req.ProfileImage, userID)
 	if err != nil {
-		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		http.Error(w, "Failed to update profile: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
