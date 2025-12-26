@@ -40,11 +40,12 @@ onMounted(async () => {
             items.value = response.data.items || [];
             shippingCost.value = response.data.shipping_cost || 0;
             
+            console.log('Invoice data:', invoice.value);
+            console.log('Guest info:', invoice.value?.guest_info);
+            
             // Fetch shipping method details to get the name
             if (invoice.value.shipping_method_id) {
                 try {
-                    const methodRes = await api.get(`/shipping-methods/${invoice.value.shipping_method_id}/cost`);
-                    // We only have the cost, let's fetch all methods to get the name
                     const allMethods = await api.get('/shipping-methods');
                     const selectedMethod = allMethods.data.find((m: any) => m.id === invoice.value.shipping_method_id);
                     if (selectedMethod) {
@@ -63,50 +64,10 @@ onMounted(async () => {
         loading.value = false;
     }
 });
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'pending':
-            return 'bg-yellow-100 text-yellow-800';
-        case 'paid':
-            return 'bg-blue-100 text-blue-800';
-        case 'shipped':
-            return 'bg-green-100 text-green-800';
-        case 'cancelled':
-            return 'bg-red-100 text-red-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
-    }
-};
-
-const getStatusLabel = (status: string) => {
-    switch (status) {
-        case 'pending':
-            return 'Menunggu Pembayaran';
-        case 'paid':
-            return 'Sudah Dibayar';
-        case 'shipped':
-            return 'Dikirim';
-        case 'cancelled':
-            return 'Dibatalkan';
-        default:
-            return status;
-    }
-};
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-100 text-black py-8">
+    <div class="min-h-screen text-black py-8" style="background-color: #F9DFDF;">
         <!-- Loading State -->
         <div v-if="loading" class="container mx-auto px-4">
             <div class="text-center py-12">
@@ -116,7 +77,7 @@ const getStatusLabel = (status: string) => {
 
         <!-- Error State -->
         <div v-else-if="error" class="container mx-auto px-4">
-            <div class="bg-white p-8 rounded-lg shadow max-w-2xl mx-auto">
+            <div class="p-8 rounded-lg shadow max-w-2xl mx-auto" style="background-color: #FBEFEF;\">
                 <h2 class="text-2xl font-bold text-red-600 mb-4">Error</h2>
                 <p class="text-gray-700 mb-6">{{ error }}</p>
                 <router-link to="/cart" class="inline-block text-white px-6 py-3 rounded-full font-bold transition-colors hover:opacity-80" style="background-color: #FF5555;">
@@ -128,7 +89,7 @@ const getStatusLabel = (status: string) => {
         <!-- Invoice Found -->
         <div v-else-if="invoice" class="container mx-auto px-4 print:p-0">
             <!-- Invoice Content -->
-            <div class="bg-white p-8 rounded-lg shadow print:shadow-none print:rounded-none print:p-0">
+            <div class="p-8 rounded-lg shadow print:shadow-none print:rounded-none print:p-0" style="background-color: #FBEFEF;\">
                 <div class="max-w-4xl mx-auto">
                     <!-- Header -->
                     <div class="mb-6 pb-6 border-b border-gray-300 print:mb-4 print:pb-4">

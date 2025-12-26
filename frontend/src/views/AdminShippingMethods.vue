@@ -132,7 +132,7 @@ const formatCurrency = (value: number) => {
 <template>
   <div class="p-6 max-w-5xl mx-auto">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Metode Pengiriman</h1>
+      <h1 class="text-3xl font-bold text-gray-800">Metode Pembayaran</h1>
       <button
         @click="openForm"
         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
@@ -143,9 +143,9 @@ const formatCurrency = (value: number) => {
 
     <!-- Form Modal -->
     <div v-if="showForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <div class="rounded-lg shadow-xl p-6 w-full max-w-md" style="background-color: #FCF8F8;">
         <h2 class="text-xl font-bold mb-4">
-          {{ isEditing ? 'Edit Metode Pengiriman' : 'Tambah Metode Pengiriman Baru' }}
+          {{ isEditing ? 'Edit Metode' : 'Tambah Metode Baru' }}
         </h2>
 
         <div class="space-y-4">
@@ -217,7 +217,7 @@ const formatCurrency = (value: number) => {
     </div>
 
     <!-- Table -->
-    <div v-else class="bg-white rounded-lg shadow overflow-x-auto">
+    <div v-else class="rounded-lg shadow overflow-x-auto" style="background-color: #FCF8F8;">
       <table class="w-full">
         <thead class="bg-gray-100 border-b">
           <tr>

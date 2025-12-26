@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
 import { computed } from 'vue'
 
 const authStore = useAuthStore()
 const cartStore = useCartStore()
-const route = useRoute()
 
 const totalItems = computed(() => cartStore.totalItems)
 </script>

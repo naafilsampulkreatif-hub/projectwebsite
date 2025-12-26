@@ -132,7 +132,7 @@ const handleFileUpload = async (event: any) => {
     </div>
 
     <!-- Product Form -->
-    <div v-if="showForm" class="bg-white p-8 rounded-[2rem] shadow-xl mb-10 border border-gray-100">
+    <div v-if="showForm" class="p-8 rounded-[2rem] shadow-xl mb-10 border border-gray-100" style="background-color: #FCF8F8;">
         <h2 class="text-2xl font-bold mb-6 border-b pb-2">{{ isEditing ? 'Edit' : 'Tambah' }} Produk</h2>
         <form @submit.prevent="saveProduct" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <input v-model="form.name" placeholder="Nama Produk" class="bg-gray-50 border border-gray-200 p-4 rounded-xl focus:outline-none focus:border-blue-400" required>
@@ -162,7 +162,7 @@ const handleFileUpload = async (event: any) => {
     </div>
 
     <!-- Product List -->
-    <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-gray-100">
+    <div class="rounded-[2rem] shadow-xl overflow-hidden border border-gray-100" style="background-color: #FCF8F8;">
         <table class="w-full text-left">
             <thead class="bg-gray-50 border-b border-gray-100">
                 <tr>

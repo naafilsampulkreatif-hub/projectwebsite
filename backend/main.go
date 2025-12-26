@@ -75,6 +75,7 @@ func main() {
 	adminRouter.HandleFunc("/users/{id}/role", handlers.UpdateUserRole).Methods("PUT")                 // Update user role
 	adminRouter.HandleFunc("/users/{id}", handlers.DeleteUser).Methods("DELETE")                       // Delete user
 	adminRouter.HandleFunc("/customer-info", handlers.GetCustomerInfo).Methods("GET")                  // Get customer checkout data
+	adminRouter.HandleFunc("/customer-info/{id}", handlers.DeleteCustomerInfo).Methods("DELETE")       // Delete customer info
 	adminRouter.HandleFunc("/profile", handlers.GetAdminProfile).Methods("GET")                        // Get admin profile
 	adminRouter.HandleFunc("/profile", handlers.UpdateAdminProfile).Methods("PUT")                     // Update admin profile
 	adminRouter.HandleFunc("/password", handlers.ChangeAdminPassword).Methods("POST")                  // Change admin password

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"ecommerce-backend/db"
 	"ecommerce-backend/models"
@@ -40,16 +41,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 func GetCustomerInfo(w http.ResponseWriter, r *http.Request) {
 	log.Printf("GetCustomerInfo called by user: %v", r.Context().Value("user_id"))
 
-	query := `SELECT id, user_id, session_id, full_name, email, phone, address, province, city, postal_code, created_at 
-	          FROM customer_info ORDER BY created_at DESC`
-	rows, err := db.DB.Query(query)
-	if err != nil {
-		log.Printf("GetCustomerInfo query error: %v", err)
-		http.Error(w, "Failed to fetch customer info", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
 	type CustomerInfo struct {
 		ID         int    `json:"id"`
 		UserID     *int   `json:"user_id"`
@@ -62,22 +53,130 @@ func GetCustomerInfo(w http.ResponseWriter, r *http.Request) {
 		City       string `json:"city"`
 		PostalCode string `json:"postal_code"`
 		CreatedAt  string `json:"created_at"`
+		Source     string `json:"source"` // "customer_info" or "order"
 	}
 
 	var customers []CustomerInfo
+
+	// First, get from customer_info table
+	query := `SELECT id, user_id, session_id, full_name, email, phone, address, province, city, postal_code, created_at 
+	          FROM customer_info ORDER BY created_at DESC`
+	rows, err := db.DB.Query(query)
+	if err != nil {
+		log.Printf("GetCustomerInfo query error: %v", err)
+		http.Error(w, "Failed to fetch customer info", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
 	for rows.Next() {
 		var c CustomerInfo
 		if err := rows.Scan(&c.ID, &c.UserID, &c.SessionID, &c.FullName, &c.Email, &c.Phone, &c.Address, &c.Province, &c.City, &c.PostalCode, &c.CreatedAt); err != nil {
 			log.Printf("GetCustomerInfo scan error: %v", err)
 			continue
 		}
+		c.Source = "customer_info"
 		customers = append(customers, c)
+	}
+
+	// Then, get from guest_info in orders for guest orders that aren't already in customer_info
+	guestQuery := `SELECT o.id, NULL as user_id, o.session_id, 
+	              JSON_EXTRACT(o.guest_info, '$.full_name') as full_name,
+	              JSON_EXTRACT(o.guest_info, '$.email') as email,
+	              JSON_EXTRACT(o.guest_info, '$.phone') as phone,
+	              JSON_EXTRACT(o.guest_info, '$.address') as address,
+	              JSON_EXTRACT(o.guest_info, '$.province') as province,
+	              JSON_EXTRACT(o.guest_info, '$.city') as city,
+	              JSON_EXTRACT(o.guest_info, '$.postal_code') as postal_code,
+	              o.created_at
+	          FROM orders o
+	          WHERE o.session_id IS NOT NULL AND o.guest_info IS NOT NULL
+	          ORDER BY o.created_at DESC`
+
+	guestRows, err := db.DB.Query(guestQuery)
+	if err != nil {
+		log.Printf("GetCustomerInfo guest query error: %v", err)
+		// Continue anyway, we have data from customer_info
+	} else {
+		defer guestRows.Close()
+
+		// Track which customer infos we already have to avoid duplicates
+		existingSessions := make(map[string]bool)
+		for _, c := range customers {
+			if c.SessionID != "" {
+				existingSessions[c.SessionID] = true
+			}
+		}
+
+		for guestRows.Next() {
+			var c CustomerInfo
+			var fullName, email, phone, address, province, city, postalCode sql.NullString
+
+			if err := guestRows.Scan(&c.ID, &c.UserID, &c.SessionID, &fullName, &email, &phone, &address, &province, &city, &postalCode, &c.CreatedAt); err != nil {
+				log.Printf("GetCustomerInfo guest scan error: %v", err)
+				continue
+			}
+
+			// Skip if we already have this session in customer_info
+			if existingSessions[c.SessionID] {
+				continue
+			}
+
+			// Remove JSON quotes from the extracted values
+			c.FullName = strings.Trim(fullName.String, `"`)
+			c.Email = strings.Trim(email.String, `"`)
+			c.Phone = strings.Trim(phone.String, `"`)
+			c.Address = strings.Trim(address.String, `"`)
+			c.Province = strings.Trim(province.String, `"`)
+			c.City = strings.Trim(city.String, `"`)
+			c.PostalCode = strings.Trim(postalCode.String, `"`)
+			c.Source = "order"
+
+			customers = append(customers, c)
+		}
 	}
 
 	log.Printf("GetCustomerInfo returning %d customers", len(customers))
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(customers)
+}
+
+// DeleteCustomerInfo deletes customer checkout data (admin only)
+func DeleteCustomerInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if id == "" {
+		writeJSONError(w, http.StatusBadRequest, "Customer ID is required")
+		return
+	}
+
+	// Delete customer info by id
+	query := "DELETE FROM customer_info WHERE id = ?"
+	res, err := db.DB.Exec(query, id)
+	if err != nil {
+		log.Printf("DeleteCustomerInfo error: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Failed to delete customer info")
+		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("DeleteCustomerInfo RowsAffected error: %v", err)
+		writeJSONError(w, http.StatusInternalServerError, "Failed to delete customer info")
+		return
+	}
+
+	if rowsAffected == 0 {
+		writeJSONError(w, http.StatusNotFound, "Customer info not found")
+		return
+	}
+
+	log.Printf("DeleteCustomerInfo: deleted customer id %s", id)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Customer info deleted successfully"})
 }
 
 // UpdateUserRole updates a user's role (admin only)

@@ -41,6 +41,7 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Checkout guest_info: %+v", req.GuestInfo)
+	log.Printf("DEBUG: userID=%v, sessionID=%s, guestInfoLen=%d", userID, sessionID, len(req.GuestInfo))
 
 	// Start a transaction
 	tx, err := db.DB.Begin()
@@ -159,12 +160,21 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userID != nil {
-		res, err = tx.Exec("INSERT INTO orders (user_id, total_amount, status, shipping_method_id) VALUES (?, ?, ?, ?)", *userID, totalAmount, "pending", shippingMethodID)
-	} else {
+	// If sessionID exists and has guest_info, treat as guest checkout (priority over userID)
+	isGuest := sessionID != "" && len(req.GuestInfo) > 0
+	log.Printf("DEBUG: isGuest=%v, sessionID='%s', guestInfoLen=%d, userID=%v", isGuest, sessionID, len(req.GuestInfo), userID)
+
+	if isGuest {
 		// For guests: create order with session_id, guest_info (JSON) and total_amount
 		guestInfoJSON, _ := json.Marshal(req.GuestInfo)
 		res, err = tx.Exec("INSERT INTO orders (session_id, guest_info, total_amount, status, shipping_method_id) VALUES (?, ?, ?, ?, ?)", sessionID, string(guestInfoJSON), totalAmount, "pending", shippingMethodID)
+	} else if userID != nil {
+		res, err = tx.Exec("INSERT INTO orders (user_id, total_amount, status, shipping_method_id) VALUES (?, ?, ?, ?)", *userID, totalAmount, "pending", shippingMethodID)
+	} else {
+		tx.Rollback()
+		log.Printf("Checkout error: no valid userID or sessionID+guestInfo")
+		writeJSONError(w, http.StatusBadRequest, "No valid user or guest info")
+		return
 	}
 
 	if err != nil {
@@ -175,8 +185,9 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 	orderID, _ := res.LastInsertId()
 
-	// 2b. For guests, store customer info in customer_info table
-	if userID == nil && len(req.GuestInfo) > 0 {
+	// 2b. Store customer info if guest_info provided (regardless of sessionID or userID)
+	// This captures ALL guest checkout data
+	if len(req.GuestInfo) > 0 {
 		fullName, _ := req.GuestInfo["full_name"].(string)
 		email, _ := req.GuestInfo["email"].(string)
 		phone, _ := req.GuestInfo["phone"].(string)
@@ -185,13 +196,24 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 		city, _ := req.GuestInfo["city"].(string)
 		postalCode, _ := req.GuestInfo["postal_code"].(string)
 
+		// Use sessionID if available, otherwise generate one for customer_info record
+		saveSessionID := sessionID
+		if saveSessionID == "" {
+			saveSessionID = fmt.Sprintf("guest_%d", orderID)
+		}
+
+		log.Printf("Saving customer info: fullName=%s, email=%s, phone=%s, address=%s, province=%s, city=%s, postalCode=%s, sessionID=%s",
+			fullName, email, phone, address, province, city, postalCode, saveSessionID)
+
 		_, err := tx.Exec(
 			"INSERT INTO customer_info (session_id, full_name, email, phone, address, province, city, postal_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-			sessionID, fullName, email, phone, address, province, city, postalCode,
+			saveSessionID, fullName, email, phone, address, province, city, postalCode,
 		)
 		if err != nil {
 			log.Printf("Checkout insert customer_info warning (non-fatal): %v", err)
 			// Non-fatal: continue even if customer_info fails
+		} else {
+			log.Printf("Customer info saved successfully for session/order: %s", saveSessionID)
 		}
 	}
 
@@ -305,11 +327,53 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse Guest Info if exists
+	// Parse Guest Info if exists (for guest orders)
+	// For registered user orders, fetch user info and combine with guest_info if any extra fields exist
 	if len(guestInfoJSON) > 0 {
 		var g map[string]interface{}
 		json.Unmarshal(guestInfoJSON, &g)
 		o.GuestInfo = g
+		log.Printf("DEBUG GetOrderInvoice: Parsed guest_info: %+v", g)
+	}
+
+	// If order belongs to a registered user, fetch user details and merge with guest_info
+	if uid.Valid {
+		var userName, userEmail, userPhone, userAddress, userProvince, userCity, userPostalCode string
+		err := db.DB.QueryRow(`SELECT name, email, phone, address, province, city, postal_code FROM users WHERE id = ?`, uid.Int64).
+			Scan(&userName, &userEmail, &userPhone, &userAddress, &userProvince, &userCity, &userPostalCode)
+		if err == nil {
+			// Create guest_info from user data if not already present
+			if o.GuestInfo == nil {
+				o.GuestInfo = make(map[string]interface{})
+			}
+			guestInfoMap := o.GuestInfo.(map[string]interface{})
+			// Prefer user data if guest_info doesn't have the field
+			if guestInfoMap["full_name"] == "" || guestInfoMap["full_name"] == nil {
+				guestInfoMap["full_name"] = userName
+			}
+			if guestInfoMap["email"] == "" || guestInfoMap["email"] == nil {
+				guestInfoMap["email"] = userEmail
+			}
+			if guestInfoMap["phone"] == "" || guestInfoMap["phone"] == nil {
+				guestInfoMap["phone"] = userPhone
+			}
+			if guestInfoMap["address"] == "" || guestInfoMap["address"] == nil {
+				guestInfoMap["address"] = userAddress
+			}
+			if guestInfoMap["province"] == "" || guestInfoMap["province"] == nil {
+				guestInfoMap["province"] = userProvince
+			}
+			if guestInfoMap["city"] == "" || guestInfoMap["city"] == nil {
+				guestInfoMap["city"] = userCity
+			}
+			if guestInfoMap["postal_code"] == "" || guestInfoMap["postal_code"] == nil {
+				guestInfoMap["postal_code"] = userPostalCode
+			}
+			o.GuestInfo = guestInfoMap
+			log.Printf("DEBUG GetOrderInvoice: Merged user info into guest_info: %+v", guestInfoMap)
+		} else {
+			log.Printf("DEBUG GetOrderInvoice: Failed to fetch user info: %v", err)
+		}
 	}
 
 	// Fetch Order Items with product name
@@ -354,10 +418,98 @@ func GetOrderInvoice(w http.ResponseWriter, r *http.Request) {
 
 // GetOrders retrieves orders for the user
 func GetOrders(w http.ResponseWriter, r *http.Request) {
-	// This system is session-based and does not provide persistent order history to users.
-	// Return an empty list so users have no visible order history.
+	userID, sessionID := getIdentity(r)
+
+	var orders []models.Order
+
+	// If user is registered, fetch their orders
+	if userID != nil {
+		log.Printf("GetOrders: Fetching orders for user_id=%d", *userID)
+		rows, err := db.DB.Query(`SELECT id, user_id, session_id, guest_info, total_amount, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC`, *userID)
+		if err != nil {
+			log.Printf("GetOrders error: %v", err)
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var o models.Order
+			var uid sql.NullInt64
+			var sid sql.NullString
+			var guestJSON []byte
+
+			if err := rows.Scan(&o.ID, &uid, &sid, &guestJSON, &o.TotalAmount, &o.Status, &o.CreatedAt); err != nil {
+				log.Printf("GetOrders scan error: %v", err)
+				continue
+			}
+
+			if uid.Valid {
+				id := int(uid.Int64)
+				o.UserID = &id
+			}
+			if sid.Valid {
+				o.SessionID = sid.String
+			}
+
+			if len(guestJSON) > 0 {
+				var gi map[string]interface{}
+				json.Unmarshal(guestJSON, &gi)
+				o.GuestInfo = gi
+			}
+
+			// Don't fetch items for order list view to keep response lightweight
+			o.Items = []models.OrderItem{}
+
+			orders = append(orders, o)
+		}
+		log.Printf("GetOrders: Returning %d orders for user_id=%d", len(orders), *userID)
+	} else if sessionID != "" {
+		// If guest, fetch their session-based orders
+		log.Printf("GetOrders: Fetching orders for session_id=%s", sessionID)
+		rows, err := db.DB.Query(`SELECT id, user_id, session_id, guest_info, total_amount, status, created_at FROM orders WHERE session_id = ? ORDER BY created_at DESC`, sessionID)
+		if err != nil {
+			log.Printf("GetOrders error: %v", err)
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var o models.Order
+			var uid sql.NullInt64
+			var sid sql.NullString
+			var guestJSON []byte
+
+			if err := rows.Scan(&o.ID, &uid, &sid, &guestJSON, &o.TotalAmount, &o.Status, &o.CreatedAt); err != nil {
+				log.Printf("GetOrders scan error: %v", err)
+				continue
+			}
+
+			if uid.Valid {
+				id := int(uid.Int64)
+				o.UserID = &id
+			}
+			if sid.Valid {
+				o.SessionID = sid.String
+			}
+
+			if len(guestJSON) > 0 {
+				var gi map[string]interface{}
+				json.Unmarshal(guestJSON, &gi)
+				o.GuestInfo = gi
+			}
+
+			// Don't fetch items for order list view to keep response lightweight
+			o.Items = []models.OrderItem{}
+
+			orders = append(orders, o)
+		}
+		log.Printf("GetOrders: Returning %d orders for session_id=%s", len(orders), sessionID)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode([]models.Order{})
+	json.NewEncoder(w).Encode(orders)
 }
 
 // AdminGetOrders returns all orders for admin dashboard
@@ -365,7 +517,7 @@ func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
 	// Admin middleware already ensured the user is admin
 	log.Printf("AdminGetOrders called by user: %v", r.Context().Value("user_id"))
 
-	rows, err := db.DB.Query(`SELECT id, user_id, session_id, guest_info, total_amount, status, created_at FROM orders ORDER BY created_at DESC`)
+	rows, err := db.DB.Query(`SELECT id, user_id, session_id, guest_info, total_amount, status, created_at, shipping_method_id FROM orders ORDER BY created_at DESC`)
 	if err != nil {
 		log.Printf("AdminGetOrders query error: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -374,15 +526,17 @@ func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type OrderResponse struct {
-		ID          int                      `json:"id"`
-		UserID      *int                     `json:"user_id"`
-		SessionID   string                   `json:"session_id"`
-		GuestInfo   interface{}              `json:"guest_info"`
-		TotalAmount float64                  `json:"total_amount"`
-		Status      string                   `json:"status"`
-		CreatedAt   string                   `json:"created_at"`
-		Items       []map[string]interface{} `json:"items"`
-		User        *map[string]interface{}  `json:"user,omitempty"`
+		ID               int                      `json:"id"`
+		UserID           *int                     `json:"user_id"`
+		SessionID        string                   `json:"session_id"`
+		GuestInfo        interface{}              `json:"guest_info"`
+		TotalAmount      float64                  `json:"total_amount"`
+		Status           string                   `json:"status"`
+		CreatedAt        string                   `json:"created_at"`
+		ShippingMethodID *int                     `json:"shipping_method_id,omitempty"`
+		ShippingMethod   *map[string]interface{}  `json:"shipping_method,omitempty"`
+		Items            []map[string]interface{} `json:"order_items"`
+		User             *map[string]interface{}  `json:"user,omitempty"`
 	}
 
 	var orders []OrderResponse
@@ -392,8 +546,9 @@ func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
 		var guestJSON []byte
 		var uid sql.NullInt64
 		var sid sql.NullString
+		var shippingMethodID sql.NullInt64
 
-		if err := rows.Scan(&o.ID, &uid, &sid, &guestJSON, &o.TotalAmount, &o.Status, &o.CreatedAt); err != nil {
+		if err := rows.Scan(&o.ID, &uid, &sid, &guestJSON, &o.TotalAmount, &o.Status, &o.CreatedAt, &shippingMethodID); err != nil {
 			log.Printf("AdminGetOrders scan error: %v", err)
 			continue
 		}
@@ -405,6 +560,10 @@ func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
 		if sid.Valid {
 			o.SessionID = sid.String
 		}
+		if shippingMethodID.Valid {
+			id := int(shippingMethodID.Int64)
+			o.ShippingMethodID = &id
+		}
 
 		if len(guestJSON) > 0 {
 			var gi map[string]interface{}
@@ -412,19 +571,43 @@ func AdminGetOrders(w http.ResponseWriter, r *http.Request) {
 			o.GuestInfo = gi
 		}
 
-		// Fetch items
-		itemRows, err := db.DB.Query(`SELECT oi.quantity, oi.price, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?`, o.ID)
+		// Fetch order items with product details
+		itemRows, err := db.DB.Query(`SELECT oi.id, oi.product_id, oi.quantity, oi.price, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?`, o.ID)
 		if err == nil {
 			var items []map[string]interface{}
 			for itemRows.Next() {
-				var qty int
+				var itemID, productID, qty int
 				var price float64
 				var name string
-				itemRows.Scan(&qty, &price, &name)
-				items = append(items, map[string]interface{}{"name": name, "quantity": qty, "price": price, "total": price * float64(qty)})
+				if err := itemRows.Scan(&itemID, &productID, &qty, &price, &name); err == nil {
+					items = append(items, map[string]interface{}{
+						"id":           itemID,
+						"product_id":   productID,
+						"product_name": name,
+						"quantity":     qty,
+						"price":        price,
+						"total":        price * float64(qty),
+					})
+				}
 			}
 			itemRows.Close()
 			o.Items = items
+		}
+
+		// Fetch shipping method details
+		if o.ShippingMethodID != nil {
+			var smName, smDesc string
+			var smCost float64
+			err := db.DB.QueryRow(`SELECT name, description, cost FROM shipping_methods WHERE id = ?`, *o.ShippingMethodID).Scan(&smName, &smDesc, &smCost)
+			if err == nil {
+				shippingMethod := map[string]interface{}{
+					"id":          *o.ShippingMethodID,
+					"name":        smName,
+					"description": smDesc,
+					"cost":        smCost,
+				}
+				o.ShippingMethod = &shippingMethod
+			}
 		}
 
 		// If order has user_id, fetch basic user info

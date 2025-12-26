@@ -175,7 +175,7 @@ func ensureShippingMethods() {
 		log.Println("shipping_method_id column already exists")
 	}
 
-	// Insert default COD method if no methods exist
+	// Insert default COD method if none with id=1 exists (prevent duplicates)
 	var count int
 	err = DB.QueryRow("SELECT COUNT(*) FROM shipping_methods").Scan(&count)
 	if err != nil {
@@ -184,6 +184,7 @@ func ensureShippingMethods() {
 	}
 
 	if count == 0 {
+		// Only insert if table is completely empty
 		_, err = DB.Exec(`INSERT INTO shipping_methods (id, name, description, cost, is_active) 
 		                  VALUES (1, 'COD (Bayar di Tempat)', 'Pembayaran saat pesanan tiba', 50000, 1)`)
 		if err != nil {
@@ -192,6 +193,20 @@ func ensureShippingMethods() {
 			log.Println("Default COD shipping method created")
 		}
 	} else {
+		// Check if id=1 exists, if not, create it
+		var cod int
+		err = DB.QueryRow("SELECT COUNT(*) FROM shipping_methods WHERE id = 1").Scan(&cod)
+		if err == nil && cod == 0 {
+			// ID 1 doesn't exist, ensure it exists
+			_, err = DB.Exec(`INSERT INTO shipping_methods (id, name, description, cost, is_active) 
+			                  VALUES (1, 'COD (Bayar di Tempat)', 'Pembayaran saat pesanan tiba', 50000, 1) 
+			                  ON DUPLICATE KEY UPDATE name=VALUES(name)`)
+			if err != nil {
+				log.Println("Warning: could not insert default COD method:", err)
+			} else {
+				log.Println("Ensured default COD shipping method exists")
+			}
+		}
 		log.Printf("Shipping methods table has %d entries\n", count)
 	}
 }

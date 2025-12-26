@@ -77,7 +77,7 @@ const router = createRouter({
         { path: 'pesanan', name: 'admin-pesanan', component: AdminOrders },
         { path: 'pengguna', name: 'admin-pengguna', component: AdminUsers },
         { path: 'pengaturan', name: 'admin-pengaturan', component: AdminSettings },
-        { path: 'pengiriman', name: 'admin-pengiriman', component: AdminShippingMethods }
+        { path: 'metode', name: 'admin-metode', component: AdminShippingMethods }
       ]
     },
     {

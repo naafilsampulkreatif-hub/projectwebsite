@@ -7,7 +7,7 @@ const router = useRouter();
 </script>
 
 <template>
-	<div class="min-h-screen bg-[#F3F3F3] flex text-black">
+	<div class="min-h-screen flex text-black" style="background-color: #F9DFDF;">
 		 <!-- Sidebar -->
 		 <aside class="w-64 bg-[#1a1a1a] text-white min-h-screen p-8 hidden md:flex flex-col fixed h-full">
 				<h2 class="text-3xl font-extrabold mb-6 text-blue-500 tracking-tighter">NS ADMIN</h2>
@@ -38,9 +38,9 @@ const router = useRouter();
 							</router-link>
 						</li>
 						<li>
-							<router-link to="/admin/pengiriman" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-400/20 hover:text-red-700 transition-all transform hover:translate-x-2" active-class="bg-red-600/20 text-red-700">
-								<span class="w-2 h-2 bg-transparent rounded-full"></span>
-								<span class="ml-1">Metode Pengiriman</span>
+						<router-link to="/admin/metode" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-400/20 hover:text-red-700 transition-all transform hover:translate-x-2" active-class="bg-red-600/20 text-red-700">
+							<span class="w-2 h-2 bg-transparent rounded-full"></span>
+							<span class="ml-1">Metode</span>
 							</router-link>
 						</li>
 					</ul>

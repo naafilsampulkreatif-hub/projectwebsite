@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import api from '../services/api'
 import { useToastStore } from '../stores/toast'
 
@@ -8,6 +8,7 @@ const toast = useToastStore()
 // User management
 const users = ref<any[]>([])
 const customers = ref<any[]>([])
+const searchCustomer = ref('')
 
 // Comment moderation
 const comments = ref<any[]>([])
@@ -113,6 +114,33 @@ const selectCommentForModeration = (comment: any) => {
   moderationStatus.value = comment.status
   moderationNotes.value = comment.admin_notes || ''
 }
+
+const deleteCustomerInfo = async (customerId: number, customerName: string) => {
+  if (!confirm(`Hapus data pelanggan ${customerName}?`)) {
+    return
+  }
+
+  try {
+    await api.delete(`/admin/customer-info/${customerId}`)
+    toast.show('Data pelanggan berhasil dihapus', 'success')
+    await loadCustomers()
+  } catch (e: any) {
+    console.error('Failed to delete customer info', e)
+    toast.show(e.response?.data?.message || 'Gagal menghapus data pelanggan', 'error')
+  }
+}
+
+const filteredCustomers = computed(() => {
+  if (!searchCustomer.value) {
+    return customers.value
+  }
+  const query = searchCustomer.value.toLowerCase()
+  return customers.value.filter(c =>
+    c.full_name?.toLowerCase().includes(query) ||
+    c.email?.toLowerCase().includes(query) ||
+    c.phone?.includes(query)
+  )
+})
 </script>
 
 <template>
@@ -157,7 +185,7 @@ const selectCommentForModeration = (comment: any) => {
     <!-- Users Tab -->
     <div v-if="activeTab === 'users'" class="space-y-4">
       <h2 class="text-2xl font-bold text-stone-800">Daftar Pengguna</h2>
-      <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <div class="overflow-x-auto rounded-lg shadow" style="background-color: #FCF8F8;">
         <table class="w-full">
           <thead class="bg-stone-800 text-white border-b">
             <tr>
@@ -203,11 +231,22 @@ const selectCommentForModeration = (comment: any) => {
     <!-- Customers Tab -->
     <div v-if="activeTab === 'customers'" class="space-y-4">
       <h2 class="text-2xl font-bold text-stone-800">Data Pelanggan yang Checkout</h2>
-      <div v-if="customers.length === 0" class="text-center py-12 bg-stone-100 rounded-lg">
+      
+      <!-- Search Box -->
+      <div class="rounded-lg shadow p-4" style="background-color: #FCF8F8;">
+        <input 
+          v-model="searchCustomer"
+          type="text"
+          placeholder="Cari berdasarkan nama, email, atau no. HP..."
+          class="w-full border border-stone-300 rounded-lg px-4 py-2 focus:outline-none focus:border-amber-400 bg-stone-50"
+        />
+      </div>
+
+      <div v-if="filteredCustomers.length === 0" class="text-center py-12 rounded-lg" style="background-color: #FBEFEF;">
         <p class="text-stone-600">Tidak ada data pelanggan</p>
       </div>
       <div v-else class="overflow-x-auto">
-        <table class="w-full bg-white rounded-lg shadow border-collapse">
+        <table class="w-full rounded-lg shadow border-collapse" style="background-color: #FCF8F8;">
           <thead class="bg-stone-800 text-white">
             <tr>
               <th class="px-4 py-3 text-left font-bold">Nama</th>
@@ -216,19 +255,29 @@ const selectCommentForModeration = (comment: any) => {
               <th class="px-4 py-3 text-left font-bold">Alamat</th>
               <th class="px-4 py-3 text-left font-bold">Kota</th>
               <th class="px-4 py-3 text-left font-bold">Terdaftar</th>
+              <th class="px-4 py-3 text-center font-bold">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="customer in customers" :key="customer.id" class="border-b border-stone-200 hover:bg-stone-50">
+            <tr v-for="customer in filteredCustomers" :key="customer.id" class="border-b border-stone-200 hover:bg-stone-50">
               <td class="px-4 py-3 font-bold text-stone-800">{{ customer.full_name }}</td>
               <td class="px-4 py-3 text-stone-700">{{ customer.email }}</td>
               <td class="px-4 py-3 text-stone-700">{{ customer.phone }}</td>
               <td class="px-4 py-3 text-stone-700 max-w-xs truncate">{{ customer.address }}</td>
-              <td class="px-4 py-3 text-stone-700">{{ customer.city }}</td>
+              <td class="px-4 py-3 text-stone-700">{{ customer.city }}, {{ customer.province }}</td>
               <td class="px-4 py-3 text-sm text-stone-500">{{ new Date(customer.created_at).toLocaleDateString('id-ID') }}</td>
+              <td class="px-4 py-3 text-center">
+                <button
+                  @click="deleteCustomerInfo(customer.id, customer.full_name)"
+                  class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-400 transition-colors"
+                >
+                  Hapus
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
+        <div class="mt-2 text-stone-600 text-sm px-4">Total: {{ filteredCustomers.length }} pelanggan</div>
       </div>
     </div>
 
@@ -271,7 +320,7 @@ const selectCommentForModeration = (comment: any) => {
         </div>
 
         <!-- Moderation Form -->
-        <div v-if="selectedComment" class="bg-white p-6 rounded-lg shadow space-y-4 border border-amber-200">
+        <div v-if="selectedComment" class="p-6 rounded-lg shadow space-y-4 border border-amber-200" style="background-color: #FCF8F8;">
           <h3 class="text-xl font-bold text-stone-800">Detail Komentar</h3>
 
           <div class="bg-orange-50 p-4 rounded border border-orange-200">

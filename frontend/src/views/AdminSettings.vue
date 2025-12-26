@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import { useToastStore } from '../stores/toast'
 import { useAuthStore } from '../stores/auth'
@@ -25,16 +25,15 @@ const userStats = ref<any>(null)
 // Customer Info
 const customerInfo = ref<any[]>([])
 const loadingCustomerInfo = ref(false)
-const searchCustomer = ref('')
 
 // Tab switching
-const activeTab = ref<'profile' | 'password' | 'activity' | 'stats' | 'customers'>('profile')
+const activeTab = ref<'profile' | 'password' | 'activity' | 'stats' | 'customer'>('profile')
 
 onMounted(async () => {
   await loadAdminProfile()
   await loadActivityLog()
-
   await loadStats()
+  await loadCustomerInfo()
 })
 
 const loadAdminProfile = async () => {
@@ -79,17 +78,20 @@ const loadCustomerInfo = async () => {
   }
 }
 
-const filteredCustomers = computed(() => {
-  if (!searchCustomer.value) {
-    return customerInfo.value
+const deleteCustomerInfo = async (customerId: number, customerName: string) => {
+  if (!confirm(`Hapus data pelanggan ${customerName}?`)) return
+
+  try {
+    await api.delete(`/admin/customer-info/${customerId}`)
+    toast.show('Data pelanggan berhasil dihapus', 'success')
+    await loadCustomerInfo()
+  } catch (e) {
+    console.error('Failed to delete customer info', e)
+    toast.show('Gagal menghapus data pelanggan', 'error')
   }
-  const query = searchCustomer.value.toLowerCase()
-  return customerInfo.value.filter(c =>
-    c.full_name?.toLowerCase().includes(query) ||
-    c.email?.toLowerCase().includes(query) ||
-    c.phone?.includes(query)
-  )
-})
+}
+
+
 
 const updateProfile = async () => {
   try {
@@ -133,6 +135,8 @@ const changePassword = async () => {
     toast.show(e.response?.data || 'Gagal mengubah password', 'error')
   }
 }
+
+
 </script>
 
 <template>
@@ -161,17 +165,7 @@ const changePassword = async () => {
       >
         Password
       </button>
-      <button
-        @click="activeTab = 'customers'; loadCustomerInfo()"
-        :class="[
-          'px-4 md:px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap text-sm md:text-base',
-          activeTab === 'customers'
-            ? 'border-emerald-500 text-emerald-600'
-            : 'border-transparent text-slate-400 hover:text-slate-600'
-        ]"
-      >
-        Data Pelanggan
-      </button>
+
       <button
         @click="activeTab = 'stats'"
         :class="[
@@ -182,6 +176,17 @@ const changePassword = async () => {
         ]"
       >
         Statistik
+      </button>
+      <button
+        @click="activeTab = 'customer'"
+        :class="[
+          'px-4 md:px-6 py-3 font-bold uppercase border-b-2 transition whitespace-nowrap text-sm md:text-base',
+          activeTab === 'customer'
+            ? 'border-emerald-500 text-emerald-600'
+            : 'border-transparent text-slate-400 hover:text-slate-600'
+        ]"
+      >
+        Data Pelanggan
       </button>
       <button
         @click="activeTab = 'activity'"
@@ -199,7 +204,7 @@ const changePassword = async () => {
     <!-- Profile Tab -->
     <div v-if="activeTab === 'profile'" class="max-w-2xl">
       <h2 class="text-2xl font-bold mb-6 text-slate-800">Profil Admin</h2>
-      <div class="bg-white p-8 rounded-lg shadow space-y-6 border border-slate-200">
+      <div class="p-8 rounded-lg shadow space-y-6 border border-slate-200" style="background-color: #FCF8F8;">
         <div v-if="!isEditingProfile" class="space-y-4">
           <div>
             <label class="text-sm text-slate-500 uppercase font-bold">Nama</label>
@@ -257,7 +262,7 @@ const changePassword = async () => {
     <!-- Password Tab -->
     <div v-if="activeTab === 'password'" class="max-w-2xl">
       <h2 class="text-2xl font-bold mb-6">Ganti Password</h2>
-      <div class="bg-white p-8 rounded-lg shadow">
+      <div class="p-8 rounded-lg shadow" style="background-color: #FCF8F8;">
         <div v-if="!isChangingPassword" class="text-center py-8">
           <button
             @click="isChangingPassword = true"
@@ -319,19 +324,19 @@ const changePassword = async () => {
     <div v-if="activeTab === 'stats'" class="space-y-6">
       <h2 class="text-2xl font-bold">Statistik Sistem</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" v-if="userStats">
-        <div class="bg-white p-6 rounded-lg shadow text-center">
+        <div class="p-6 rounded-lg shadow text-center" style="background-color: #FCF8F8;">
           <p class="text-gray-500 text-sm uppercase font-bold mb-2">Total Pengguna</p>
           <p class="text-4xl font-bold text-neon-green">{{ userStats.total_users }}</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow text-center">
+        <div class="p-6 rounded-lg shadow text-center" style="background-color: #FCF8F8;">
           <p class="text-gray-500 text-sm uppercase font-bold mb-2">Admin</p>
           <p class="text-4xl font-bold text-blue-600">{{ userStats.admin_users }}</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow text-center">
+        <div class="p-6 rounded-lg shadow text-center" style="background-color: #FCF8F8;">
           <p class="text-gray-500 text-sm uppercase font-bold mb-2">Customer</p>
           <p class="text-4xl font-bold text-purple-600">{{ userStats.customer_users }}</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow text-center">
+        <div class="p-6 rounded-lg shadow text-center" style="background-color: #FCF8F8;">
           <p class="text-gray-500 text-sm uppercase font-bold mb-2">Total Pesanan</p>
           <p class="text-4xl font-bold text-orange-600">{{ userStats.total_orders }}</p>
         </div>
@@ -345,7 +350,7 @@ const changePassword = async () => {
         <div
           v-for="log in activityLog"
           :key="log.id"
-          class="bg-white p-4 rounded-lg shadow border-l-4 border-neon-green"
+          class="p-4 rounded-lg shadow border-l-4 border-neon-green" style="background-color: #FCF8F8;"
         >
           <div class="flex justify-between items-start mb-2">
             <div class="flex gap-2 items-center">
@@ -366,56 +371,51 @@ const changePassword = async () => {
       </div>
     </div>
 
-    <!-- Customers Tab -->
-    <div v-if="activeTab === 'customers'">
-      <h2 class="text-2xl font-bold mb-6 text-slate-800">Data Pelanggan</h2>
+    <!-- Customer Info Tab -->
+    <div v-if="activeTab === 'customer'" class="space-y-6">
+      <h2 class="text-2xl font-bold mb-6">Data Pelanggan yang Checkout</h2>
       
-      <div class="bg-white p-6 rounded-lg shadow border border-slate-200 mb-6">
-        <input 
-          v-model="searchCustomer"
-          type="text"
-          placeholder="Cari berdasarkan nama, email, atau no. HP..."
-          class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 focus:outline-none focus:border-emerald-400"
-        />
+      <div v-if="loadingCustomerInfo" class="text-center py-8">
+        <p class="text-gray-500">Memuat data pelanggan...</p>
       </div>
-
-      <div class="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
-        <div v-if="loadingCustomerInfo" class="p-8 text-center">
-          <p class="text-slate-600 animate-pulse">Memuat data pelanggan...</p>
-        </div>
-
-        <div v-else-if="filteredCustomers.length === 0" class="p-8 text-center">
-          <p class="text-slate-500">Tidak ada data pelanggan</p>
-        </div>
-
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th class="px-6 py-3 text-left font-bold text-slate-700">Nama Lengkap</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-700">Email</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-700">No. HP</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-700">Alamat</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-700">Kota</th>
-                <th class="px-6 py-3 text-left font-bold text-slate-700">Tanggal</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200">
-              <tr v-for="customer in filteredCustomers" :key="customer.id" class="hover:bg-slate-50 transition-colors">
-                <td class="px-6 py-4 font-bold text-slate-800">{{ customer.full_name }}</td>
-                <td class="px-6 py-4 text-slate-700">{{ customer.email }}</td>
-                <td class="px-6 py-4 text-slate-700">{{ customer.phone }}</td>
-                <td class="px-6 py-4 text-slate-700 text-sm">{{ customer.address }}</td>
-                <td class="px-6 py-4 text-slate-700">{{ customer.city }}, {{ customer.province }}</td>
-                <td class="px-6 py-4 text-xs text-slate-600">{{ new Date(customer.created_at).toLocaleDateString('id-ID') }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      
+      <div v-else-if="customerInfo.length === 0" class="text-center py-8 rounded-lg shadow" style="background-color: #FBEFEF;">
+        <p class="text-gray-500">Belum ada data pelanggan</p>
       </div>
-
-      <div v-if="filteredCustomers.length > 0" class="mt-4 text-slate-600 text-sm">
-        Total: {{ filteredCustomers.length }} pelanggan
+      
+      <div v-else class="overflow-x-auto">
+        <table class="w-full rounded-lg shadow" style="background-color: #FCF8F8;">
+          <thead class="bg-slate-100 border-b">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-bold text-slate-700">ID</th>
+              <th class="px-6 py-3 text-left text-sm font-bold text-slate-700">Nama Lengkap</th>
+              <th class="px-6 py-3 text-left text-sm font-bold text-slate-700">Email</th>
+              <th class="px-6 py-3 text-left text-sm font-bold text-slate-700">No. HP</th>
+              <th class="px-6 py-3 text-left text-sm font-bold text-slate-700">Alamat</th>
+              <th class="px-6 py-3 text-left text-sm font-bold text-slate-700">Kota</th>
+              <th class="px-6 py-3 text-left text-sm font-bold text-slate-700">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="customer in customerInfo" :key="customer.id" class="border-b hover:bg-slate-50">
+              <td class="px-6 py-4 text-sm text-slate-700">{{ customer.id }}</td>
+              <td class="px-6 py-4 text-sm font-semibold text-slate-900">{{ customer.full_name }}</td>
+              <td class="px-6 py-4 text-sm text-slate-700">{{ customer.email }}</td>
+              <td class="px-6 py-4 text-sm text-slate-700">{{ customer.phone }}</td>
+              <td class="px-6 py-4 text-sm text-slate-700">{{ customer.address }}</td>
+              <td class="px-6 py-4 text-sm text-slate-700">{{ customer.city }}, {{ customer.province }}</td>
+              <td class="px-6 py-4 text-sm">
+                <button
+                  @click="deleteCustomerInfo(customer.id, customer.full_name)"
+                  class="text-white font-bold px-4 py-2 rounded hover:opacity-80"
+                  style="background-color: #FF5555;"
+                >
+                  Hapus
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
